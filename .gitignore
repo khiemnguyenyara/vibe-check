@@ -24,6 +24,16 @@
 .DS_Store
 *.pem
 
+# editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# docs: /docs is the tracked Source of Truth (hla.md, interface-contracts.md, ...).
+# Only local/personal drafts that never became an official doc are ignored.
+docs/**/*.local.md
+docs/.drafts/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

@@ -1,0 +1,40 @@
+vibe-check/
+├── public/
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── src/
+│   ├── app/                      # Next.js App Router (routing, layouts, pages)
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components/
+│   │   └── ui/                   # Shadcn/UI generated components
+│   │       └── .gitkeep
+│   ├── lib/                      # Cross-domain helpers & AI configuration
+│   │   ├── ai/
+│   │   │   └── config.ts         # Provider/model config shared by all modules
+│   │   └── utils.ts              # e.g. cn() class-name helper
+│   └── modules/                  # One folder per business domain
+│       ├── tech/
+│       │   ├── index.ts          # Registers the module (id, prompt, workspace)
+│       │   ├── prompt.ts         # Domain-specific AI system prompt
+│       │   └── workspace.tsx     # Domain-specific UI/workspace
+│       ├── marketing/
+│       │   ├── index.ts
+│       │   ├── prompt.ts
+│       │   └── workspace.tsx
+│       ├── registry.ts           # Central map: id -> ModuleDefinition
+│       └── types.ts              # Shared ModuleDefinition interface
+├── eslint.config.mjs
+├── next-env.d.ts
+├── next.config.ts
+├── package.json
+├── postcss.config.mjs
+├── README.md
+├── tree.txt
+├── tsconfig.json
+└── yarn.lock
