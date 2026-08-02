@@ -2,7 +2,8 @@
 
 **Status:** Source of Truth
 **Owner:** Product Architecture
-**Last updated:** 2026-07-25
+**Last updated:** 2026-08-01
+**Sửa đổi mới nhất:** [`specs/001-mvp-guest-mode.md`](../specs/001-mvp-guest-mode.md) mở rộng phạm vi MVP theo `PRD.md` — xem §2.4, §3 (US-08), §4 (US-12) và §5.
 
 ## 1. Cách đọc tài liệu này
 
@@ -58,6 +59,39 @@ Là một ứng viên, tôi muốn kết thúc phiên bất kỳ lúc nào và x
 - AC1: Kết thúc phiên chuyển `status` sang `"completed"` và chặn mọi `onSubmit` mới từ Workspace.
 - AC2: Lịch sử hội thoại + submission được truy xuất lại nguyên vẹn (persistence layer nằm ngoài phạm vi tài liệu này).
 
+### 2.4. Chấm điểm, tiến bộ & Guest Mode
+
+Bổ sung theo `PRD.md`, chi tiết triển khai ở [`specs/001-mvp-guest-mode.md`](../specs/001-mvp-guest-mode.md).
+
+**US-13 [MVP] — Domain:** `core` + module
+Là một ứng viên, tôi muốn nhận điểm số và phân tích lỗ hổng kiến thức ngay sau mỗi câu trả lời, để biết mình thiếu gì mà không phải chờ hết phiên.
+
+- AC1: Sau khi gửi câu trả lời, UI hiển thị điểm/thang điểm, các ý đã đề cập, và các ý còn thiếu — không cần điều hướng trang.
+- AC2: Việc chấm điểm đi qua `ModuleDefinition.interviewService.evaluateAnswer`, Core không import trực tiếp module nào.
+- AC3: `evaluateAnswer` phải tất định (deterministic) — cùng câu hỏi + câu trả lời luôn ra cùng kết quả. Ở MVP đây là scorer mock, chưa gọi mô hình thật.
+
+**US-14 [MVP] — Domain:** `core`
+Là một ứng viên, tôi muốn so sánh kết quả phiên này với các phiên trước, để theo dõi mình có tiến bộ hay không.
+
+- AC1: Màn hình tổng kết cuối phiên hiển thị tổng điểm, chi tiết từng câu và các lỗ hổng lặp lại nhiều nhất.
+- AC2: Từ phiên thứ hai trở đi, hiển thị mức chênh lệch so với phiên liền trước, quy về phần trăm (vì thang điểm giữa các phiên có thể khác nhau).
+- AC3: Ở phiên đầu tiên hiển thị trạng thái "mốc khởi điểm", không hiển thị chênh lệch 0 gây hiểu nhầm.
+
+**US-15 [MVP] — Domain:** `core`
+Là một khách (guest), tôi muốn tiến trình phỏng vấn không mất khi refresh trang, để không phải làm lại từ đầu.
+
+- AC1: Phiên đang diễn ra được lưu ở `sessionStorage` khoá `vibe-check:active-session` sau mỗi lượt.
+- AC2: Refresh giữa phiên khôi phục đầy đủ hội thoại và đúng vị trí lượt hiện tại.
+- AC3: Dữ liệu hỏng hoặc bị sửa tay bị loại bỏ im lặng, phiên bắt đầu lại thay vì crash.
+
+**US-16 [MVP] — Domain:** `core`
+Là chủ sản phẩm, tôi muốn giới hạn khách dùng thử 3 phiên rồi yêu cầu đăng nhập, để chuyển đổi người dùng ẩn danh thành tài khoản.
+
+- AC1: Bộ đếm nằm ở `localStorage` khoá `interview_count`, tăng đúng 1 cho mỗi phiên hoàn thành.
+- AC2: Refresh màn hình tổng kết **không** làm bộ đếm tăng thêm (idempotent theo `sessionId`).
+- AC3: Hoàn thành phiên thứ 3 hiển thị login wall không thể đóng bằng Escape hay click ra ngoài; màn hình tổng kết vẫn đọc được phía sau.
+- AC4: Khi đã chạm giới hạn, thẻ chuyên môn ở trang chủ không khởi tạo phiên mới nữa.
+
 ## 3. Fast-follow
 
 **US-07 [Fast-follow] — Domain:** `core`
@@ -65,10 +99,10 @@ Là một ứng viên, tôi muốn tạm dừng phiên và quay lại sau, để
 
 - AC1: `status = "paused"` được Session Engine hỗ trợ ngay từ MVP dù UI tạm dừng chưa cần hoàn thiện — đây là lý do `SessionStatus` có 4 giá trị ngay từ đầu thay vì chỉ 2.
 
-**US-08 [Fast-follow] — Domain:** `core`
+**US-08 [~~Fast-follow~~ → MVP] — Domain:** `core`
 Là một ứng viên, tôi muốn nhận một bản tóm tắt đánh giá (điểm mạnh/điểm yếu) sau khi hoàn thành phiên, để biết mình cần cải thiện gì.
 
-- AC1: Bản tóm tắt được sinh từ `getSystemPrompt` + lịch sử hội thoại, không cần thay đổi `ModuleDefinition`.
+> **Đã được nâng lên MVP** theo `PRD.md`, hiện thực ở US-13/US-14. Lưu ý AC1 gốc đã lỗi thời: bản tóm tắt MVP được sinh từ `interviewService.evaluateAnswer` — một field **optional** thêm vào `ModuleDefinition` đúng theo quy tắc additive ở `interface-contracts.md` §5, nên module cũ không bị breaking.
 
 ## 4. Roadmap — Mở rộng đa domain
 
@@ -88,16 +122,21 @@ Là một product manager, tôi muốn bật/tắt một domain cho một nhóm 
 
 - AC1: Registry hỗ trợ điều kiện include/exclude entry theo config, không cần đổi `ModuleDefinition` (đã dự trù ở `hla.md` §5).
 
-**US-12 [Roadmap] — Domain:** `core`
+**US-12 [Roadmap — đã nâng một phần lên MVP] — Domain:** `core`
 Là một ứng viên, tôi muốn chuyển đổi giữa các domain khác nhau trong cùng một tài khoản và xem lịch sử luyện tập theo từng domain, để theo dõi tiến bộ của mình trên nhiều mảng nghề nghiệp.
 
-- AC1: Lịch sử phiên lưu kèm `moduleId` — đây là lý do `id` trong `ModuleDefinition` phải ổn định vĩnh viễn (xem `interface-contracts.md` §5).
+- AC1: Lịch sử phiên lưu kèm `moduleId` — đây là lý do `id` trong `ModuleDefinition` phải ổn định vĩnh viễn (xem `interface-contracts.md` §5). **Đã làm ở MVP** (US-14): mỗi `SessionSummary` lưu `moduleId` + `specialtyId`.
+- AC2: **Vẫn thuộc Roadmap** — chuyển đổi domain trong cùng tài khoản và duyệt lịch sử theo từng domain chưa làm; MVP chỉ so sánh với phiên liền trước, lưu ở `localStorage` của khách, chưa có tài khoản.
 
 ## 5. Ngoài phạm vi (Explicitly Out of Scope — MVP)
 
 Để tránh scope creep khi triển khai, các mục sau **không** thuộc MVP dù có thể được đề cập ở review:
 
-- Chấm điểm tự động bằng rubric có trọng số (chỉ có nhận xét định tính ở MVP).
+- ~~Chấm điểm tự động bằng rubric có trọng số (chỉ có nhận xét định tính ở MVP).~~
+  **Đã gỡ khỏi danh sách này** theo `PRD.md` — xem US-13. Điều khoản gốc nhằm ngăn việc xây một AI grader theo rubric có trọng số ngay ở MVP; scorer hiện tại là mock tất định dựa trên `expectedKeyPoints` có sẵn trong bộ câu hỏi, nên không ràng buộc sản phẩm vào thiết kế rubric có trọng số. Chấm điểm bằng mô hình thật vẫn nằm ngoài MVP.
+- Xác thực/đăng nhập thật — login wall ở MVP chỉ là placeholder, chưa có backend auth.
+- Lưu trữ phía server — MVP chỉ dùng storage của trình duyệt, mất khi người dùng xoá dữ liệu site.
+- Cho phép ứng viên tự chọn `experienceLevel` / focus area (US-02) — MVP vẫn hard-code `"mid"`.
 - Phỏng vấn bằng giọng nói (voice-to-voice).
 - Multi-domain trong cùng một phiên (một phiên luôn gắn với đúng một `moduleId`).
 - Cộng tác nhiều người dùng trong cùng một phiên.

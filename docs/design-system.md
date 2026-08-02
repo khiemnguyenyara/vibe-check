@@ -1,8 +1,9 @@
 # Design System — Vibe Check
 
-**Status:** Source of Truth
+**Status:** Source of Truth — §2.3 và §4 đã bị thay thế
 **Owner:** Product Architecture
-**Last updated:** 2026-07-25
+**Last updated:** 2026-08-02
+**Thay thế một phần:** [`specs/003-ui-ux-blueprint.md`](../specs/003-ui-ux-blueprint.md) §3 thay thế phần xử lý thị giác ở §2.3 và §4 dưới đây (neo-brutalism → glass/gamified, đã triển khai 2026-08-02). **Vẫn còn hiệu lực:** §2.2 quy tắc 1–3, §3 (quyền sở hữu Chat/Workspace pane và responsive), §5 (accessibility, được mở rộng ở specs/003 §11).
 
 ## 1. Triết lý thiết kế
 
