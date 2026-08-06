@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+import { LocaleProvider } from "@/lib/i18n/locale-context";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -26,11 +28,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    // suppressHydrationWarning: LocaleProvider corrects `lang` client-side
+    // from the stored preference, the same pattern next-themes uses for
+    // client-only preferences that the server can't know about.
     <html
-      lang="en"
+      lang="vi"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full scroll-smooth antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <LocaleProvider>{children}</LocaleProvider>
+      </body>
     </html>
   );
 }

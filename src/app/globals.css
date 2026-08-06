@@ -2,7 +2,11 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (@media (prefers-color-scheme: dark));
+/* Vibe Check ships light-only. Bound to a `.dark` class that is never applied
+   rather than to the OS preference, so a user in system dark mode still gets
+   the light purple palette the design is built on. Flip this back to
+   `(@media (prefers-color-scheme: dark))` to re-enable dark mode. */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --color-background: var(--background);
@@ -66,6 +70,10 @@
 }
 
 :root {
+  /* Light-only: without this, form controls and scrollbars still render dark
+     for a user whose OS is in dark mode. */
+  color-scheme: light;
+
   /* Light, faintly violet page base — the purple gradient wash in the page
      shell composites on top of this rather than on pure white. */
   --background: oklch(0.985 0.008 300);
@@ -132,8 +140,9 @@
   --station-accent-product: oklch(0.50 0.14 70);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
+/* Dark palette, parked. Scoped to `.dark` instead of the OS preference so it
+   never activates on its own — see the @custom-variant note at the top. */
+.dark {
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.205 0 0);
@@ -191,7 +200,6 @@
     --station-accent-design-text: oklch(0.78 0.13 162);
     --station-accent-data-text: oklch(0.76 0.13 240);
     --station-accent-product-text: oklch(0.82 0.13 70);
-  }
 }
 
 @layer base {

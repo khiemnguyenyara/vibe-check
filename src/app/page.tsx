@@ -4,26 +4,21 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Lock, Play, Sparkles, Trophy } from "lucide-react";
+import { ArrowRight, Lock, Play, Trophy } from "lucide-react";
 
-import { QuestNode, type QuestNodeState } from "@/components/quest/quest-node";
+import { resolveNode } from "@/components/home/resolve-node";
+import type { ResolvedNode } from "@/components/home/types";
+import { useGuestState } from "@/components/home/use-guest-state";
+import { SiteFooter } from "@/components/layout/site-footer";
+import { SiteHeader } from "@/components/layout/site-header";
+import { QuestNode } from "@/components/quest/quest-node";
 import { ActionBubble } from "@/components/ui/action-bubble";
 import { GlassCard } from "@/components/ui/glass-card";
-import { domains, type DomainConfig, type Specialty } from "@/lib/domains";
+import { domains, type DomainConfig } from "@/lib/domains";
+import { formatMessage } from "@/lib/i18n/format";
+import { useLocale } from "@/lib/i18n/locale-context";
 import { MAP_ENTRY, STAGGER, riseVariants } from "@/lib/motion/tokens";
-import {
-  buildProgressIndex,
-  currentTrack,
-  progressKey,
-  type CurrentTrack,
-  type ProgressIndex,
-  type SpecialtyProgress,
-} from "@/lib/session/progress";
-import {
-  GUEST_SESSION_LIMIT,
-  loadHistory,
-  readInterviewCount,
-} from "@/lib/session/storage";
+import { GUEST_SESSION_LIMIT } from "@/lib/session/storage";
 
 /**
  * The practice home — specs/003-ui-ux-blueprint.md §7 and §10.1.
@@ -41,96 +36,6 @@ import {
  * "next step" presumed for someone who has not told us their trade.
  */
 
-interface GuestState {
-  readonly count: number;
-  readonly progress: ProgressIndex;
-  readonly track: CurrentTrack | null;
-  readonly loaded: boolean;
-}
-
-const EMPTY_GUEST: GuestState = {
-  count: 0,
-  progress: new Map(),
-  track: null,
-  loaded: false,
-};
-
-/**
- * Storage is read in an effect, never during render: the server has no
- * localStorage, so a render-time read desyncs hydration and flashes the
- * wrong node states. `loaded` keeps the first paint neutral.
- */
-function useGuestState(): GuestState {
-  const [state, setState] = useState<GuestState>(EMPTY_GUEST);
-
-  /* eslint-disable react-hooks/set-state-in-effect */
-  useEffect(() => {
-    const history = loadHistory();
-    setState({
-      count: readInterviewCount(),
-      progress: buildProgressIndex(history),
-      track: currentTrack(history),
-      loaded: true,
-    });
-  }, []);
-  /* eslint-enable react-hooks/set-state-in-effect */
-
-  return state;
-}
-
-interface ResolvedNode {
-  readonly domain: DomainConfig;
-  readonly specialty: Specialty;
-  readonly state: QuestNodeState;
-  readonly record?: SpecialtyProgress;
-  readonly lockedReason?: string;
-}
-
-/**
- * Assign a state to one specialty.
- *
- * `active` means "the specialty you are currently practising" — the one you
- * last sat a session for. It is not "the next step in a sequence", because
- * there is no sequence: Frontend and Backend are different jobs, not
- * consecutive levels of one.
- */
-function resolveNode(
-  domain: DomainConfig,
-  specialty: Specialty,
-  guest: GuestState,
-  atGuestLimit: boolean
-): ResolvedNode {
-  const record = guest.progress.get(progressKey(domain.id, specialty.id));
-
-  if (domain.comingSoon) {
-    return {
-      domain,
-      specialty,
-      state: "locked",
-      lockedReason: "Nội dung đang được hoàn thiện.",
-    };
-  }
-
-  if (atGuestLimit) {
-    return {
-      domain,
-      specialty,
-      state: "locked",
-      record,
-      lockedReason: "Đã dùng hết lượt miễn phí.",
-    };
-  }
-
-  const isCurrent =
-    guest.track?.moduleId === domain.id &&
-    guest.track?.specialtyId === specialty.id;
-
-  if (isCurrent) return { domain, specialty, state: "active", record };
-  if (record?.mastered) return { domain, specialty, state: "mastered", record };
-  if (record) return { domain, specialty, state: "completed", record };
-  return { domain, specialty, state: "available" };
-}
-
 /** Field accent overrides, applied on a section root (§3.1). */
 function fieldAccent(domainId: string): React.CSSProperties {
   return {
@@ -139,127 +44,87 @@ function fieldAccent(domainId: string): React.CSSProperties {
   } as React.CSSProperties;
 }
 
-/**
- * Blurred sticky header: brand row, then the career categories as a single
- * scrollable rail so the fields are reachable before any scrolling.
- */
-function NavBar({
-  onPickField,
-}: {
-  readonly onPickField: (domainId: string) => void;
-}) {
-  return (
-    <header className="sticky top-0 z-50 border-b border-quest-surface-border bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/50">
-      <div className="mx-auto max-w-5xl px-3 sm:px-4">
-        <div className="flex items-center gap-2.5 py-2.5">
-          <Image
-            src="/vibe_check.jpg"
-            alt="Vibe Check"
-            width={32}
-            height={32}
-            className="size-8 shrink-0 rounded-xl object-cover"
-            priority
-          />
-          <span className="text-base font-extrabold tracking-tight text-foreground">
-            Vibe Check
-          </span>
-        </div>
-
-        <nav
-          aria-label="Lĩnh vực nghề nghiệp"
-          className="-mx-3 flex gap-1.5 overflow-x-auto px-3 pb-2 sm:-mx-4 sm:px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {domains.map((domain) => {
-            const Icon = domain.icon;
-            return (
-              <button
-                key={domain.id}
-                type="button"
-                onClick={() => onPickField(domain.id)}
-                className="flex shrink-0 items-center gap-1.5 rounded-full border border-quest-surface-border bg-quest-surface px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-interview-accent/40 hover:text-interview-accent-text"
-              >
-                <Icon className="size-3.5" aria-hidden />
-                {domain.sectionTitle}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-    </header>
-  );
-}
-
-/** Hero copy — one line per slide, rotated on a timer. */
-const HERO_SLIDES = [
-  {
-    title: "Luyện phỏng vấn cùng AI",
-    body: "Câu hỏi bám sát đúng công việc bạn đang ứng tuyển.",
-  },
-  {
-    title: "Chấm điểm ngay sau mỗi câu",
-    body: "Biết ngay điểm mạnh và phần kiến thức còn thiếu.",
-  },
-  {
-    title: "Theo dõi tiến bộ từng phiên",
-    body: "Điểm cao nhất của bạn được lưu lại qua các lần luyện.",
-  },
-] as const;
+/** Hero backdrop — same treatment as the footer, low-opacity and held behind the copy. */
+const HERO_IMAGE =
+  "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1600&q=60";
 
 /** Auto-advancing hero. Fade only — no carousel controls, no drag. */
 function HeroSlider() {
   const reduced = useReducedMotion() ?? false;
   const [index, setIndex] = useState(0);
+  const { t } = useLocale();
+  const slides = t.home.hero.slides;
 
   useEffect(() => {
     const timer = setInterval(
-      () => setIndex((i) => (i + 1) % HERO_SLIDES.length),
+      () => setIndex((i) => (i + 1) % slides.length),
       4500
     );
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
-  const slide = HERO_SLIDES[index];
+  const slide = slides[index];
 
   return (
-    <GlassCard
-      variant="active"
-      className="overflow-hidden bg-gradient-to-br from-violet-500/15 via-fuchsia-500/10 to-transparent"
-    >
-      <div className="min-h-[92px] sm:min-h-[80px]">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={index}
-            initial={reduced ? false : { opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reduced ? { opacity: 1 } : { opacity: 0, y: -6 }}
-            transition={reduced ? { duration: 0 } : { duration: 0.3 }}
-          >
-            <h1 className="text-xl font-extrabold tracking-tight text-foreground sm:text-2xl">
-              {slide.title}
-            </h1>
-            <p className="mt-1.5 text-sm text-muted-foreground">{slide.body}</p>
-          </motion.div>
-        </AnimatePresence>
-      </div>
+    /* A sibling of <main>, not a child of it — <main> is capped at max-w-5xl,
+       so a child can only bleed to the edge of that box, never the viewport.
+       Sitting outside it (same as the footer) is what makes this genuinely
+       full-width; the inner wrapper below puts the text back on the grid. */
+    <section className="relative isolate overflow-hidden border-y border-quest-surface-border">
+      <Image
+        src={HERO_IMAGE}
+        alt=""
+        fill
+        sizes="100vw"
+        priority
+        aria-hidden
+        className="-z-10 object-cover opacity-15"
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-10 bg-gradient-to-br from-violet-500/30 via-fuchsia-500/15 to-transparent"
+      />
 
-      <div className="mt-3 flex gap-1.5" aria-hidden>
-        {HERO_SLIDES.map((_, i) => (
-          <span
-            key={i}
-            className={`h-1 rounded-full transition-all ${
-              i === index
-                ? "w-5 bg-interview-accent"
-                : "w-1.5 bg-foreground/20"
-            }`}
-          />
-        ))}
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
+        <div className="min-h-[96px] sm:min-h-[88px]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={index}
+              initial={reduced ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduced ? { opacity: 1 } : { opacity: 0, y: -6 }}
+              transition={reduced ? { duration: 0 } : { duration: 0.3 }}
+            >
+              <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+                {slide.title}
+              </h1>
+              <p className="mt-2 text-sm text-muted-foreground sm:text-base">
+                {slide.body}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <div className="mt-3 flex gap-1.5" aria-hidden>
+          {slides.map((_, i) => (
+            <span
+              key={i}
+              className={`h-1 rounded-full transition-all ${
+                i === index
+                  ? "w-5 bg-interview-accent"
+                  : "w-1.5 bg-foreground/20"
+              }`}
+            />
+          ))}
+        </div>
       </div>
-    </GlassCard>
+    </section>
   );
 }
 
 function GuestLimitBanner({ delay }: { readonly delay: number }) {
   const reduced = useReducedMotion() ?? false;
+  const { t } = useLocale();
 
   return (
     <motion.div
@@ -277,11 +142,12 @@ function GuestLimitBanner({ delay }: { readonly delay: number }) {
         </span>
         <div>
           <p className="text-sm font-bold text-foreground">
-            Bạn đã dùng hết {GUEST_SESSION_LIMIT} phiên miễn phí
+            {formatMessage(t.home.guestLimit.title, {
+              count: GUEST_SESSION_LIMIT,
+            })}
           </p>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            Đăng nhập để tiếp tục luyện tập không giới hạn và giữ lại toàn bộ
-            tiến độ. Tính năng đăng nhập sẽ sớm ra mắt.
+            {t.home.guestLimit.body}
           </p>
         </div>
       </GlassCard>
@@ -303,6 +169,7 @@ function CurrentTrackCard({
   readonly delay: number;
 }) {
   const reduced = useReducedMotion() ?? false;
+  const { t } = useLocale();
   const Icon = node.specialty.icon;
   const best = node.record?.bestPercent ?? 0;
   const attempts = node.record?.attempts ?? 0;
@@ -317,7 +184,7 @@ function CurrentTrackCard({
     >
       <GlassCard variant="active">
         <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Chuyên môn của bạn
+          {t.home.currentTrack.label}
         </p>
 
         <div className="mt-3 flex items-start gap-3">
@@ -340,7 +207,7 @@ function CurrentTrackCard({
           <div className="flex-1">
             <div className="flex items-baseline justify-between">
               <span className="text-xs font-medium text-muted-foreground">
-                Điểm cao nhất
+                {t.home.currentTrack.bestScore}
               </span>
               <span className="text-sm font-extrabold tabular-nums text-interview-accent-text">
                 {best}%
@@ -356,7 +223,9 @@ function CurrentTrackCard({
             </div>
           </div>
           <div className="text-right">
-            <p className="text-xs font-medium text-muted-foreground">Số phiên</p>
+            <p className="text-xs font-medium text-muted-foreground">
+              {t.home.currentTrack.sessionCount}
+            </p>
             <p className="text-sm font-extrabold tabular-nums text-foreground">
               {attempts}
             </p>
@@ -366,7 +235,7 @@ function CurrentTrackCard({
         {node.record?.mastered && (
           <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-quest-complete/15 px-2.5 py-1 text-xs font-bold text-quest-complete">
             <Trophy className="size-3.5" aria-hidden />
-            Bạn đã thành thạo chuyên môn này
+            {t.home.currentTrack.mastered}
           </p>
         )}
 
@@ -375,7 +244,9 @@ function CurrentTrackCard({
             icon={<Play className="size-4" aria-hidden />}
             onClick={onResume}
           >
-            Luyện tiếp {node.specialty.title}
+            {formatMessage(t.home.currentTrack.resume, {
+              specialty: node.specialty.title,
+            })}
           </ActionBubble>
         </div>
       </GlassCard>
@@ -402,6 +273,7 @@ function FieldSection({
   readonly delay: number;
 }) {
   const reduced = useReducedMotion() ?? false;
+  const { t } = useLocale();
   const DomainIcon = domain.icon;
 
   return (
@@ -425,7 +297,7 @@ function FieldSection({
           {/* Once per field, not once per node (§6.2). */}
           {domain.comingSoon && (
             <span className="ml-auto rounded-full bg-quest-locked px-2 py-0.5 text-[10px] font-bold text-quest-locked-foreground">
-              Sắp ra mắt
+              {t.home.field.comingSoon}
             </span>
           )}
         </div>
@@ -456,6 +328,7 @@ function FieldSection({
 export default function Home() {
   const router = useRouter();
   const reduced = useReducedMotion() ?? false;
+  const { t } = useLocale();
   const guest = useGuestState();
   const [lockNotice, setLockNotice] = useState<string | null>(null);
   const [showAllFields, setShowAllFields] = useState(false);
@@ -517,11 +390,13 @@ export default function Home() {
       </div>
 
       <div className="relative">
-        <NavBar onPickField={handlePickField} />
+        <SiteHeader onPickField={handlePickField} />
 
-        <main className="mx-auto max-w-5xl px-3 pb-24 pt-5 sm:px-4">
-          <HeroSlider />
+        {/* Sibling of <main>, not nested inside it — see the note on
+            HeroSlider above for why that's required for a true full-bleed. */}
+        <HeroSlider />
 
+        <main className="mx-auto max-w-5xl px-3 pb-24 pt-4 sm:px-4">
           {atGuestLimit && (
             <div className="mt-4">
               <GuestLimitBanner delay={MAP_ENTRY.header} />
@@ -550,12 +425,14 @@ export default function Home() {
               custom={MAP_ENTRY.header + 0.1}
             >
               <h2 className="text-lg font-extrabold text-foreground">
-                {activeNode ? "Lĩnh vực khác" : "Chọn chuyên môn của bạn"}
+                {activeNode
+                  ? t.home.sections.otherFieldsTitle
+                  : t.home.sections.chooseFieldTitle}
               </h2>
               <p className="mt-1 text-xs text-muted-foreground">
                 {activeNode
-                  ? "Mỗi lĩnh vực là một hướng nghề riêng — chỉ chọn nếu bạn muốn luyện thêm mảng khác."
-                  : "Chọn đúng công việc bạn đang ứng tuyển để câu hỏi sát với thực tế."}
+                  ? t.home.sections.otherFieldsBody
+                  : t.home.sections.chooseFieldBody}
               </p>
             </motion.div>
 
@@ -579,7 +456,7 @@ export default function Home() {
                   onClick={() => setShowAllFields(true)}
                   className="inline-flex items-center gap-1.5 rounded-full border border-interview-accent/35 bg-quest-surface px-4 py-2 text-sm font-bold text-interview-accent-text transition-colors hover:bg-interview-accent/10"
                 >
-                  Find some?
+                  {t.home.sections.showMore}
                   <ArrowRight className="size-4" aria-hidden />
                 </button>
               </div>
@@ -597,15 +474,7 @@ export default function Home() {
           </p>
         </main>
 
-        <footer className="border-t border-quest-surface-border">
-          <div className="mx-auto flex max-w-5xl flex-col items-center gap-2 px-3 py-8 text-center sm:px-4">
-            <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-              <Sparkles className="size-3.5" aria-hidden />
-              Luyện phỏng vấn cùng AI
-            </span>
-            <p className="text-xs text-muted-foreground">© 2026 Vibe Check</p>
-          </div>
-        </footer>
+        <SiteFooter />
       </div>
     </div>
   );

@@ -1,0 +1,51 @@
+{
+  "header": {
+    "brand": "Vibe Check",
+    "fieldsNavLabel": "Lĩnh vực nghề nghiệp",
+    "localeToggleLabel": "Chuyển ngôn ngữ"
+  },
+  "footer": {
+    "tagline": "Luyện phỏng vấn cùng AI",
+    "description": "Chọn đúng chuyên môn, trả lời như phỏng vấn thật, và nhận điểm cùng nhận xét ngay sau mỗi câu.",
+    "copyright": "© 2026 Vibe Check"
+  },
+  "home": {
+    "hero": {
+      "slides": [
+        {
+          "title": "Luyện phỏng vấn cùng AI",
+          "body": "Câu hỏi bám sát đúng công việc bạn đang ứng tuyển."
+        },
+        {
+          "title": "Chấm điểm ngay sau mỗi câu",
+          "body": "Biết ngay điểm mạnh và phần kiến thức còn thiếu."
+        },
+        {
+          "title": "Theo dõi tiến bộ từng phiên",
+          "body": "Điểm cao nhất của bạn được lưu lại qua các lần luyện."
+        }
+      ]
+    },
+    "guestLimit": {
+      "title": "Bạn đã dùng hết {count} phiên miễn phí",
+      "body": "Đăng nhập để tiếp tục luyện tập không giới hạn và giữ lại toàn bộ tiến độ. Tính năng đăng nhập sẽ sớm ra mắt."
+    },
+    "currentTrack": {
+      "label": "Chuyên môn của bạn",
+      "bestScore": "Điểm cao nhất",
+      "sessionCount": "Số phiên",
+      "mastered": "Bạn đã thành thạo chuyên môn này",
+      "resume": "Luyện tiếp {specialty}"
+    },
+    "field": {
+      "comingSoon": "Sắp ra mắt"
+    },
+    "sections": {
+      "otherFieldsTitle": "Lĩnh vực khác",
+      "chooseFieldTitle": "Chọn chuyên môn của bạn",
+      "otherFieldsBody": "Mỗi lĩnh vực là một hướng nghề riêng — chỉ chọn nếu bạn muốn luyện thêm mảng khác.",
+      "chooseFieldBody": "Chọn đúng công việc bạn đang ứng tuyển để câu hỏi sát với thực tế.",
+      "showMore": "Xem thêm lĩnh vực?"
+    }
+  }
+}

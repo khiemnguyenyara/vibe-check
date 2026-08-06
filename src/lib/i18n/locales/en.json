@@ -1,0 +1,51 @@
+{
+  "header": {
+    "brand": "Vibe Check",
+    "fieldsNavLabel": "Career fields",
+    "localeToggleLabel": "Switch language"
+  },
+  "footer": {
+    "tagline": "Practice interviews with AI",
+    "description": "Pick the right specialty, answer like a real interview, and get your score with feedback right after every question.",
+    "copyright": "© 2026 Vibe Check"
+  },
+  "home": {
+    "hero": {
+      "slides": [
+        {
+          "title": "Practice interviews with AI",
+          "body": "Questions tailored to the exact job you're applying for."
+        },
+        {
+          "title": "Get scored right after each answer",
+          "body": "See your strengths and knowledge gaps immediately."
+        },
+        {
+          "title": "Track your progress every session",
+          "body": "Your best score is saved across every practice run."
+        }
+      ]
+    },
+    "guestLimit": {
+      "title": "You've used all {count} free sessions",
+      "body": "Sign in to keep practicing without limits and keep all your progress. Sign-in is coming soon."
+    },
+    "currentTrack": {
+      "label": "Your specialty",
+      "bestScore": "Best score",
+      "sessionCount": "Sessions",
+      "mastered": "You've mastered this specialty",
+      "resume": "Keep practicing {specialty}"
+    },
+    "field": {
+      "comingSoon": "Coming soon"
+    },
+    "sections": {
+      "otherFieldsTitle": "Other fields",
+      "chooseFieldTitle": "Choose your specialty",
+      "otherFieldsBody": "Each field is its own career path — only pick one if you want to practice something else.",
+      "chooseFieldBody": "Pick the exact job you're applying for so the questions match reality.",
+      "showMore": "Explore more fields?"
+    }
+  }
+}
