@@ -49,6 +49,7 @@ export const LIMITS = {
   maxKeyPointChars: 300,
   maxFocusAreas: 5,
   maxSummaryChars: 500,
+  maxOptions: 6,
 } as const;
 
 /* ------------------------------------------------------------------ */
@@ -88,15 +89,33 @@ export const idempotencyKeySchema = z.string().uuid();
 /* Domain shapes (§8.2)                                                */
 /* ------------------------------------------------------------------ */
 
-export const interviewQuestionSchema = z.object({
+export const openInterviewQuestionSchema = z.object({
   id: z.string().min(1).max(64),
+  type: z.literal("open"),
   prompt: z.string().min(1).max(LIMITS.maxPromptChars),
   expectedKeyPoints: z
     .array(z.string().min(1).max(LIMITS.maxKeyPointChars))
     .min(1)
     .max(LIMITS.maxKeyPoints),
   maxScore: z.number().int().min(1).max(100),
+  requiresPractice: z.boolean(),
 });
+
+export const multipleChoiceInterviewQuestionSchema = z.object({
+  id: z.string().min(1).max(64),
+  type: z.literal("multiple_choice"),
+  prompt: z.string().min(1).max(LIMITS.maxPromptChars),
+  options: z
+    .array(z.string().min(1).max(LIMITS.maxKeyPointChars))
+    .min(2)
+    .max(LIMITS.maxOptions),
+  maxScore: z.number().int().min(1).max(100),
+});
+
+export const interviewQuestionSchema = z.discriminatedUnion("type", [
+  openInterviewQuestionSchema,
+  multipleChoiceInterviewQuestionSchema,
+]);
 
 export const answerEvaluationSchema = z
   .object({

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { buildProgressIndex, currentTrack } from "@/lib/session/progress";
-import { loadHistory, readInterviewCount } from "@/lib/session/storage";
+import { loadHistory } from "@/lib/session/storage";
 
 import { EMPTY_GUEST, type GuestState } from "./types";
 
@@ -19,7 +19,6 @@ export function useGuestState(): GuestState {
   useEffect(() => {
     const history = loadHistory();
     setState({
-      count: readInterviewCount(),
       progress: buildProgressIndex(history),
       track: currentTrack(history),
       loaded: true,

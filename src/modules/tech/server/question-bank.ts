@@ -15,18 +15,34 @@ import type { ExperienceLevel } from "../../types";
  * and its export shape moved.
  */
 
-export interface QuestionBankEntry {
-  readonly question: string;
-  readonly expectedKeyPoints: readonly string[];
-  readonly rubric: {
-    readonly maxScore: number;
-    readonly criteria: string;
-  };
-  readonly difficulty_analysis: {
-    readonly suggestedLevel: "EASY" | "MEDIUM" | "HARD";
-    readonly reasoning: string;
-  };
-}
+export type QuestionBankEntry =
+  | {
+      readonly type: "open";
+      readonly question: string;
+      readonly expectedKeyPoints: readonly string[];
+      readonly rubric: {
+        readonly maxScore: number;
+        readonly criteria: string;
+      };
+      readonly difficulty_analysis: {
+        readonly suggestedLevel: "EASY" | "MEDIUM" | "HARD";
+        readonly reasoning: string;
+      };
+      /** None of the current questions ask for a code exercise — all false today. */
+      readonly requiresPractice: boolean;
+    }
+  | {
+      readonly type: "multiple_choice";
+      readonly question: string;
+      readonly options: readonly string[];
+      /** Index into `options`. Server-only — never enters `toQuestion()`'s output. */
+      readonly correctOptionIndex: number;
+      readonly maxScore: number;
+      readonly difficulty_analysis: {
+        readonly suggestedLevel: "EASY" | "MEDIUM" | "HARD";
+        readonly reasoning: string;
+      };
+    };
 
 /** How many questions one Tech session contains. */
 export const TECH_SESSION_LENGTH = 5;
@@ -34,6 +50,7 @@ export const TECH_SESSION_LENGTH = 5;
 export const QUESTION_BANK: Record<ExperienceLevel, readonly QuestionBankEntry[]> = {
   junior: [
     {
+      type: "open",
       question:
         "Sự khác biệt giữa `useState` và `useRef` trong React là gì? Khi nào bạn sẽ chọn dùng `useRef` thay vì `useState`?",
       expectedKeyPoints: [
@@ -50,8 +67,10 @@ export const QUESTION_BANK: Record<ExperienceLevel, readonly QuestionBankEntry[]
         suggestedLevel: "EASY",
         reasoning: "Kiến thức nền tảng về React hooks, phù hợp Junior.",
       },
+      requiresPractice: false,
     },
     {
+      type: "open",
       question:
         "`key` prop trong danh sách React dùng để làm gì? Điều gì xảy ra nếu bạn dùng index của mảng làm `key`?",
       expectedKeyPoints: [
@@ -68,8 +87,10 @@ export const QUESTION_BANK: Record<ExperienceLevel, readonly QuestionBankEntry[]
         suggestedLevel: "EASY",
         reasoning: "Kiến thức nền tảng về reconciliation trong React.",
       },
+      requiresPractice: false,
     },
     {
+      type: "open",
       question:
         "Bạn hiểu thế nào về `any` và `unknown` trong TypeScript? Vì sao `unknown` thường được xem là lựa chọn an toàn hơn?",
       expectedKeyPoints: [
@@ -86,10 +107,46 @@ export const QUESTION_BANK: Record<ExperienceLevel, readonly QuestionBankEntry[]
         suggestedLevel: "EASY",
         reasoning: "Kiến thức nền tảng TypeScript cần có ở Junior.",
       },
+      requiresPractice: false,
+    },
+    {
+      type: "multiple_choice",
+      question:
+        "Trong JavaScript, phương thức nào dùng để chuyển một chuỗi JSON thành object?",
+      options: [
+        "JSON.parse()",
+        "JSON.stringify()",
+        "Object.assign()",
+        "String.parse()",
+      ],
+      correctOptionIndex: 0,
+      maxScore: 10,
+      difficulty_analysis: {
+        suggestedLevel: "EASY",
+        reasoning: "Kiến thức nền tảng về JSON trong JavaScript.",
+      },
+    },
+    {
+      type: "multiple_choice",
+      question:
+        "Trong CSS Flexbox, thuộc tính nào dùng để căn giữa các item theo trục chính (main axis) khi `flex-direction` là `row`?",
+      options: [
+        "justify-content",
+        "align-items",
+        "align-self",
+        "flex-wrap",
+      ],
+      correctOptionIndex: 0,
+      maxScore: 10,
+      difficulty_analysis: {
+        suggestedLevel: "EASY",
+        reasoning: "Kiến thức nền tảng về Flexbox layout.",
+      },
     },
   ],
   mid: [
     {
+      type: "open",
       question:
         "Bạn có component `UserList` nhận props `users: User[]` và callback `onSelect: (id: string) => void`. Mỗi khi component cha re-render vì một state không liên quan thay đổi, toàn bộ `UserList` và các item con đều re-render theo, dù `users` không đổi. Giải thích nguyên nhân và cách bạn tối ưu, kèm cách type props bằng TypeScript.",
       expectedKeyPoints: [
@@ -109,8 +166,10 @@ export const QUESTION_BANK: Record<ExperienceLevel, readonly QuestionBankEntry[]
         reasoning:
           "Đòi hỏi hiểu cơ chế render + kỹ thuật tối ưu phổ biến, đúng tầm Mid-level Frontend theo JD (React, TypeScript, performance).",
       },
+      requiresPractice: false,
     },
     {
+      type: "open",
       question:
         "Generic trong TypeScript giúp ích gì khi viết một custom hook như `useFetch<T>`? Hãy phác thảo signature của hook này và giải thích lý do.",
       expectedKeyPoints: [
@@ -128,8 +187,10 @@ export const QUESTION_BANK: Record<ExperienceLevel, readonly QuestionBankEntry[]
         reasoning:
           "Đòi hỏi hiểu generic và thiết kế API hook tái sử dụng — kỹ năng cốt lõi của Mid-level.",
       },
+      requiresPractice: false,
     },
     {
+      type: "open",
       question:
         "So sánh Context API và một thư viện state management ngoài (Zustand/Redux) khi dùng cho một form nhiều bước (multi-step form) có validate chéo giữa các bước.",
       expectedKeyPoints: [
@@ -147,10 +208,36 @@ export const QUESTION_BANK: Record<ExperienceLevel, readonly QuestionBankEntry[]
         suggestedLevel: "MEDIUM",
         reasoning: "Yêu cầu so sánh đánh đổi công cụ ở một tình huống cụ thể, đúng tầm Mid-level.",
       },
+      requiresPractice: false,
+    },
+    {
+      type: "multiple_choice",
+      question:
+        "Trong React, hook nào phù hợp nhất để memo hoá kết quả của một phép tính tốn kém, tránh tính lại mỗi lần re-render nếu dependencies không đổi?",
+      options: ["useEffect", "useMemo", "useCallback", "useLayoutEffect"],
+      correctOptionIndex: 1,
+      maxScore: 10,
+      difficulty_analysis: {
+        suggestedLevel: "MEDIUM",
+        reasoning: "Phân biệt đúng công dụng các hook tối ưu hoá trong React.",
+      },
+    },
+    {
+      type: "multiple_choice",
+      question:
+        "HTTP status code nào biểu thị request thành công nhưng server không trả về nội dung (no content)?",
+      options: ["201", "202", "204", "200"],
+      correctOptionIndex: 2,
+      maxScore: 10,
+      difficulty_analysis: {
+        suggestedLevel: "MEDIUM",
+        reasoning: "Kiến thức về các mã trạng thái HTTP phổ biến trong thiết kế API.",
+      },
     },
   ],
   senior: [
     {
+      type: "open",
       question:
         "Thiết kế state management cho một dashboard có nhiều widget độc lập, mỗi widget fetch dữ liệu riêng nhưng cần chia sẻ một số filter chung (khoảng thời gian, khu vực). Bạn sẽ tổ chức state ở đâu, dùng công cụ gì, và đánh đổi giữa Context API, Redux/Zustand, và server state (React Query) ra sao?",
       expectedKeyPoints: [
@@ -170,8 +257,10 @@ export const QUESTION_BANK: Record<ExperienceLevel, readonly QuestionBankEntry[]
         reasoning:
           "Yêu cầu tư duy kiến trúc, đánh đổi công cụ và performance ở quy mô nhiều component — đúng tầm Senior.",
       },
+      requiresPractice: false,
     },
     {
+      type: "open",
       question:
         "Một trang danh sách sản phẩm bị Largest Contentful Paint (LCP) chậm trên mobile. Bạn sẽ chẩn đoán nguyên nhân theo quy trình nào, và liệt kê 3 hướng tối ưu cụ thể cho Next.js App Router?",
       expectedKeyPoints: [
@@ -190,10 +279,46 @@ export const QUESTION_BANK: Record<ExperienceLevel, readonly QuestionBankEntry[]
         reasoning:
           "Đòi hỏi kinh nghiệm thực chiến về performance profiling và tối ưu ở tầng framework — tầm Senior.",
       },
+      requiresPractice: false,
+    },
+    {
+      type: "multiple_choice",
+      question:
+        "CAP theorem phát biểu rằng một hệ thống phân tán chỉ có thể đảm bảo tối đa 2 trong 3 tính chất nào cùng lúc?",
+      options: [
+        "Concurrency, Availability, Precision",
+        "Consistency, Availability, Partition tolerance",
+        "Consistency, Atomicity, Persistence",
+        "Availability, Accuracy, Performance",
+      ],
+      correctOptionIndex: 1,
+      maxScore: 10,
+      difficulty_analysis: {
+        suggestedLevel: "HARD",
+        reasoning: "Kiến thức nền tảng về hệ thống phân tán, cần thiết ở tầm Senior.",
+      },
+    },
+    {
+      type: "multiple_choice",
+      question:
+        "Kỹ thuật nào giúp giảm rủi ro khi nhiều service gọi tuần tự tới cùng một downstream dependency đang lỗi, bằng cách 'ngắt mạch' tạm thời sau một ngưỡng lỗi nhất định?",
+      options: [
+        "Load balancing",
+        "Connection pooling",
+        "Rate limiting",
+        "Circuit breaker",
+      ],
+      correctOptionIndex: 3,
+      maxScore: 10,
+      difficulty_analysis: {
+        suggestedLevel: "HARD",
+        reasoning: "Mẫu thiết kế chịu lỗi phổ biến trong hệ thống phân tán ở tầm Senior.",
+      },
     },
   ],
   staff: [
     {
+      type: "open",
       question:
         "Bạn được giao dẫn dắt việc tách một monolith Next.js front-end (một team, một repo) thành kiến trúc module hoá cho nhiều team cùng phát triển song song mà không giẫm chân nhau. Bạn sẽ định nghĩa ranh giới module như thế nào, enforce nó ra sao (tooling/CI), và xử lý các phần dùng chung (design system, auth) thế nào để tránh trở thành nút thắt cổ chai?",
       expectedKeyPoints: [
@@ -213,8 +338,10 @@ export const QUESTION_BANK: Record<ExperienceLevel, readonly QuestionBankEntry[]
         reasoning:
           "Vấn đề tổ chức kiến trúc multi-team, vượt khỏi phạm vi kỹ thuật thuần tuý sang tổ chức/process — tầm Staff.",
       },
+      requiresPractice: false,
     },
     {
+      type: "open",
       question:
         "Làm thế nào bạn đưa ra quyết định kỹ thuật gây tranh cãi (ví dụ: đổi thư viện state management toàn hệ thống) khi các team khác không đồng thuận? Hãy trình bày quy trình bạn dùng để đạt đồng thuận và giảm thiểu rủi ro triển khai.",
       expectedKeyPoints: [
@@ -233,6 +360,7 @@ export const QUESTION_BANK: Record<ExperienceLevel, readonly QuestionBankEntry[]
         reasoning:
           "Đánh giá năng lực lãnh đạo kỹ thuật và quản trị thay đổi ở quy mô tổ chức — tầm Staff.",
       },
+      requiresPractice: false,
     },
   ],
 };

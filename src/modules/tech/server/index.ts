@@ -5,7 +5,7 @@ import type { InterviewQuestion } from "@/lib/session/types";
 import type { ServerInterviewModule } from "../../server-types";
 import type { ExperienceLevel } from "../../types";
 import { QUESTION_BANK, TECH_SESSION_LENGTH, type QuestionBankEntry } from "./question-bank";
-import { scoreAnswer } from "./scorer";
+import { scoreAnswer, scoreMultipleChoice } from "./scorer";
 
 /**
  * Mock-only pacing. The scorer and bank lookup are instant, so without this
@@ -34,11 +34,23 @@ function toQuestion(
   level: ExperienceLevel,
   index: number
 ): InterviewQuestion {
+  const id = questionId(level, index);
+  if (entry.type === "multiple_choice") {
+    return {
+      id,
+      type: "multiple_choice",
+      prompt: entry.question,
+      options: entry.options,
+      maxScore: entry.maxScore,
+    };
+  }
   return {
-    id: questionId(level, index),
+    id,
+    type: "open",
     prompt: entry.question,
     expectedKeyPoints: entry.expectedKeyPoints,
     maxScore: entry.rubric.maxScore,
+    requiresPractice: entry.requiresPractice,
   };
 }
 
@@ -88,6 +100,16 @@ export const techServerModule: ServerInterviewModule = {
   },
 
   async evaluate(question, answer) {
+    if (question.type === "multiple_choice") {
+      const parsed = parseQuestionId(question.id);
+      const entry = parsed && QUESTION_BANK[parsed.level][parsed.index];
+      if (!entry || entry.type !== "multiple_choice") {
+        throw new Error(
+          `Cannot resolve multiple-choice bank entry for "${question.id}"`
+        );
+      }
+      return scoreMultipleChoice(question, answer, entry.correctOptionIndex);
+    }
     return scoreAnswer(question, answer);
   },
 };

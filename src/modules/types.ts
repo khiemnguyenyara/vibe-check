@@ -1,5 +1,3 @@
-import type { ComponentType } from "react";
-
 import type {
   InterviewSessionContextShape,
   TurnOutcome,
@@ -92,7 +90,6 @@ export interface ModuleDefinition {
   readonly label: string;
   readonly description: string;
   readonly getSystemPrompt: SystemPromptBuilder;
-  readonly Workspace: ComponentType<ModuleWorkspaceProps>;
   /**
    * Optional per the additive rule in docs/interface-contracts.md §5 — a
    * module without one (e.g. the marketing stub) still satisfies the

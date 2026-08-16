@@ -1,17 +1,24 @@
 "use client";
 
-import { use, useCallback, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { use, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 
 import { ChatPane } from "@/components/interview/chat-pane";
-import { LoginWall } from "@/components/interview/login-wall";
+import { getPendingQuestion } from "@/components/interview/current-question";
+import { InterviewSessionBar } from "@/components/interview/interview-session-bar";
+import {
+  parseInterviewLevel,
+  toExperienceLevel,
+  toInterviewLevel,
+  type InterviewLevel,
+} from "@/components/interview/level";
 import { SessionSummary } from "@/components/interview/session-summary";
 import { useInterviewSession } from "@/components/interview/use-interview-session";
+import { WorkspacePane } from "@/components/interview/workspace-pane";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { findDomain, findSpecialty } from "@/lib/domains";
-import { GUEST_SESSION_LIMIT } from "@/lib/session/storage";
+import { loadActiveSession } from "@/lib/session/storage";
 import { getModule } from "@/modules/registry";
 import type {
   InterviewSessionContext,
@@ -36,10 +43,6 @@ export default function InterviewPage({
 }) {
   const { domain: domainId, specialty: specialtyId } = use(params);
   const router = useRouter();
-  // Bumping this remounts the session engine, which is what actually starts
-  // a clean interview — router.refresh() only re-runs the server render and
-  // would leave the completed client-side session in place.
-  const [runKey, setRunKey] = useState(0);
 
   const domainConfig = findDomain(domainId);
   const specialtyConfig = findSpecialty(domainId, specialtyId);
@@ -50,16 +53,18 @@ export default function InterviewPage({
   }
 
   return (
-    <InterviewSession
-      key={runKey}
-      domainLabel={domainConfig.label}
-      specialtyLabel={specialtyConfig.label}
-      moduleId={moduleDef.id}
-      specialtyId={specialtyId}
-      moduleDef={moduleDef}
-      onExit={() => router.push("/")}
-      onRestart={() => setRunKey((current) => current + 1)}
-    />
+    <div className="flex h-dvh flex-col bg-background text-foreground">
+      <div className="flex min-h-0 flex-1 flex-col">
+        <InterviewSession
+          domainLabel={domainConfig.label}
+          specialtyLabel={specialtyConfig.label}
+          moduleId={moduleDef.id}
+          specialtyId={specialtyId}
+          moduleDef={moduleDef}
+          onExit={() => router.push("/")}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -67,6 +72,19 @@ export default function InterviewPage({
  * Split from the route component so the hooks below sit after the
  * notFound() guards — calling hooks above a conditional early return would
  * break the rules of hooks.
+ *
+ * Gates the level choice before anything below can mount: `useInterviewSession`
+ * (inside ActiveInterview) opens the session in a bootstrap effect that fires
+ * exactly once, using whatever context it's given at that render — there is no
+ * "wait until the level is ready" path inside it. So "level not chosen yet"
+ * and "session active" have to be genuinely different mounted components
+ * (ActiveInterview only ever mounts once `level` is non-null), not one
+ * component that conditionally skips its own hook call.
+ *
+ * The level itself is chosen earlier — in the popup the coach card opens —
+ * and arrives here as a `?level=` query param, not from a picker on this
+ * route. A direct visit with no query param and no resumable session has no
+ * way to know the level, so it bounces back home instead of guessing one.
  */
 function InterviewSession({
   domainLabel,
@@ -75,13 +93,95 @@ function InterviewSession({
   specialtyId,
   moduleDef,
   onExit,
-  onRestart,
 }: {
   readonly domainLabel: string;
   readonly specialtyLabel: string;
   readonly moduleId: string;
   readonly specialtyId: string;
   readonly moduleDef: NonNullable<ReturnType<typeof getModule>>;
+  readonly onExit: () => void;
+}) {
+  const searchParams = useSearchParams();
+  const [level, setLevel] = useState<InterviewLevel | null>(() =>
+    parseInterviewLevel(searchParams.get("level"))
+  );
+  // Bumped on restart to force a fresh `ActiveInterview` mount (and with it
+  // a fresh `useInterviewSession` bootstrap) at the *same* level — there is
+  // no picker on this route anymore to ask again, so "Luyện lại" just
+  // re-runs the session it already knows the difficulty for.
+  const [sessionEpoch, setSessionEpoch] = useState(0);
+
+  // Resuming a genuinely in-progress session must override the query param:
+  // the level is already baked into that session's question ids (tech/server
+  // keys its question bank by level), so trusting the URL here would risk
+  // drawing later questions from a different bank mid-session. Read-in-effect,
+  // same hydration-safe idiom use-interview-session.ts's own bootstrap effect
+  // uses — the server has no sessionStorage, so this can't run during render.
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (!moduleDef.interviewService) return;
+    const stored = loadActiveSession();
+    const isResumable =
+      stored !== null &&
+      stored.moduleId === moduleId &&
+      stored.specialtyId === specialtyId &&
+      stored.completedAt === null &&
+      stored.turns.length > 0;
+    if (isResumable) setLevel(toInterviewLevel(stored.experienceLevel));
+  }, [moduleId, specialtyId, moduleDef.interviewService]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // No level from the URL and nothing to resume — this route was reached
+  // without ever going through the coach-card popup, so send it back rather
+  // than rendering a picker here.
+  useEffect(() => {
+    if (level !== null) return;
+    onExit();
+  }, [level, onExit]);
+
+  // hla.md §4.1 step 3: an unusable module renders an unavailable state
+  // rather than throwing at the UI layer. Checked before the level guard so
+  // a domain with no interviewService (e.g. marketing) never bounces home.
+  if (!moduleDef.interviewService) {
+    return <UnavailableDomain domainLabel={domainLabel} onExit={onExit} />;
+  }
+
+  if (level === null) {
+    return (
+      <div className="grid h-full place-items-center px-6 text-center text-sm text-muted-foreground">
+        Đang chuyển hướng…
+      </div>
+    );
+  }
+
+  return (
+    <ActiveInterview
+      key={sessionEpoch}
+      specialtyLabel={specialtyLabel}
+      moduleId={moduleId}
+      specialtyId={specialtyId}
+      moduleDef={moduleDef}
+      level={level}
+      onExit={onExit}
+      onRestart={() => setSessionEpoch((epoch) => epoch + 1)}
+    />
+  );
+}
+
+function ActiveInterview({
+  specialtyLabel,
+  moduleId,
+  specialtyId,
+  moduleDef,
+  level,
+  onExit,
+  onRestart,
+}: {
+  readonly specialtyLabel: string;
+  readonly moduleId: string;
+  readonly specialtyId: string;
+  readonly moduleDef: NonNullable<ReturnType<typeof getModule>>;
+  readonly level: InterviewLevel;
   readonly onExit: () => void;
   readonly onRestart: () => void;
 }) {
@@ -94,11 +194,11 @@ function InterviewSession({
       // ever reaches getSystemPrompt, which must stay a pure function of
       // its context and therefore cannot depend on a random id.
       sessionId: `${moduleId}:${specialtyId}`,
-      experienceLevel: "mid",
+      experienceLevel: toExperienceLevel(level),
       focusAreas: [specialtyLabel],
       locale: "vi-VN",
     }),
-    [moduleId, specialtyId, specialtyLabel]
+    [moduleId, specialtyId, specialtyLabel, level]
   );
 
   const {
@@ -108,9 +208,9 @@ function InterviewSession({
     isEvaluating,
     error,
     sessionLength,
-    interviewCount,
     summary,
     pendingAnswer,
+    startedAt,
     submitAnswer,
     retry,
   } = useInterviewSession({
@@ -126,138 +226,115 @@ function InterviewSession({
     }
   }, []);
 
-  // hla.md §4.1 step 3: an unusable module renders an unavailable state
-  // rather than throwing at the UI layer.
-  if (!moduleDef.interviewService) {
-    return (
-      <UnavailableDomain
-        domainLabel={domainLabel}
+  // The scratchpad is only relevant when the question being asked calls for
+  // one — a multiple-choice pick or a pure discussion question never needs
+  // it. Defaults to HIDDEN while no question has arrived yet (e.g. the
+  // initial mock-latency gap): defaulting to visible-then-yanked-away reads
+  // as broken (a pane flashing for under a second), while appearing once a
+  // practice question actually loads reads as an extra tool showing up —
+  // the safer direction to default in. Core's own layout call, not
+  // something the module opts into.
+  const pendingQuestion = getPendingQuestion(turns);
+  const showWorkspace =
+    pendingQuestion?.type === "open" && pendingQuestion.requiresPractice;
+
+  const chatPane = (
+    <ChatPane
+      title={`${specialtyLabel} Interview`}
+      avatarSeed={`${moduleId}-${specialtyId}`}
+      turns={turns}
+      isFetchingNext={isFetchingNext}
+      isEvaluating={isEvaluating}
+      error={error}
+      isReadOnly={status !== "in_progress"}
+      sessionLength={sessionLength}
+      pendingAnswer={pendingAnswer}
+      onSubmitAnswer={(answer) => void submitAnswer(answer)}
+      onRetry={() => void retry()}
+    />
+  );
+
+  let body: React.ReactNode;
+  if (status === "completed" && summary) {
+    body = (
+      <SessionSummary
+        summary={summary}
+        turns={turns}
         specialtyLabel={specialtyLabel}
-        onExit={onExit}
+        onRestart={onRestart}
+        onHome={onExit}
       />
     );
+  } else if (showWorkspace) {
+    body = (
+      /* Each pane is rendered exactly once and shown/hidden with CSS.
+         Rendering a separate mobile and desktop tree would duplicate
+         both panes in the DOM, giving the chat two independent drafts
+         and the workspace two scratchpads. The Tabs primitive drives the
+         mobile switcher per design-system.md §3.1, which also forbids
+         stacking the panes vertically — the workspace needs real height. */
+      <div className="flex h-full flex-col lg:grid lg:grid-cols-[2fr_3fr] lg:flex-row">
+        <Tabs
+          value={mobilePane}
+          onValueChange={(value) => setMobilePane(value as MobilePane)}
+          className="shrink-0 px-4 pt-3 pb-1 lg:hidden"
+        >
+          <TabsList>
+            <TabsTrigger value="chat">Hội thoại</TabsTrigger>
+            <TabsTrigger value="workspace">Làm bài</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        <div
+          className={`min-h-0 flex-1 lg:block lg:border-r lg:border-quest-surface-border ${
+            mobilePane === "chat" ? "block" : "hidden"
+          }`}
+        >
+          {chatPane}
+        </div>
+
+        <div
+          className={`min-h-0 flex-1 lg:block ${
+            mobilePane === "workspace" ? "block" : "hidden"
+          }`}
+        >
+          <WorkspacePane
+            context={context}
+            status={status}
+            onSubmit={handleWorkspaceSubmit}
+          />
+        </div>
+      </div>
+    );
+  } else {
+    // No mobile Tabs switcher — there is nothing to switch to.
+    body = <div className="h-full">{chatPane}</div>;
   }
 
-  const Workspace = moduleDef.Workspace;
-  const isOverGuestLimit = interviewCount >= GUEST_SESSION_LIMIT;
-
   return (
-    <div className="flex h-dvh flex-col">
-      <TopBar
-        domainLabel={domainLabel}
-        specialtyLabel={specialtyLabel}
+    <div className="flex h-full flex-col">
+      <InterviewSessionBar
+        startedAt={startedAt}
+        endedAt={summary?.completedAt ?? null}
         onExit={onExit}
       />
 
-      <div className="flex-1 overflow-hidden">
-        {status === "completed" && summary ? (
-          <SessionSummary
-            summary={summary}
-            turns={turns}
-            specialtyLabel={specialtyLabel}
-            onRestart={onRestart}
-            onHome={onExit}
-          />
-        ) : (
-          /* Each pane is rendered exactly once and shown/hidden with CSS.
-             Rendering a separate mobile and desktop tree would duplicate
-             both panes in the DOM, giving the chat two independent drafts
-             and the workspace two scratchpads. The Tabs primitive drives the
-             mobile switcher per design-system.md §3.1, which also forbids
-             stacking the panes vertically — the workspace needs real height. */
-          <div className="flex h-full flex-col lg:grid lg:grid-cols-[2fr_3fr] lg:flex-row">
-            <Tabs
-              value={mobilePane}
-              onValueChange={(value) => setMobilePane(value as MobilePane)}
-              className="shrink-0 px-4 pt-3 pb-1 lg:hidden"
-            >
-              <TabsList>
-                <TabsTrigger value="chat">Hội thoại</TabsTrigger>
-                <TabsTrigger value="workspace">Làm bài</TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            <div
-              className={`min-h-0 flex-1 lg:block lg:border-r lg:border-quest-surface-border ${
-                mobilePane === "chat" ? "block" : "hidden"
-              }`}
-            >
-              <ChatPane
-                title={`${specialtyLabel} Interview`}
-                turns={turns}
-                isFetchingNext={isFetchingNext}
-                isEvaluating={isEvaluating}
-                error={error}
-                isReadOnly={status !== "in_progress"}
-                sessionLength={sessionLength}
-                pendingAnswer={pendingAnswer}
-                onSubmitAnswer={(answer) => void submitAnswer(answer)}
-                onRetry={() => void retry()}
-              />
-            </div>
-
-            <div
-              className={`min-h-0 flex-1 lg:block ${
-                mobilePane === "workspace" ? "block" : "hidden"
-              }`}
-            >
-              <Workspace
-                context={context}
-                status={status}
-                onSubmit={handleWorkspaceSubmit}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {status === "completed" && isOverGuestLimit && <LoginWall />}
-    </div>
-  );
-}
-
-function TopBar({
-  domainLabel,
-  specialtyLabel,
-  onExit,
-}: {
-  readonly domainLabel: string;
-  readonly specialtyLabel: string;
-  readonly onExit: () => void;
-}) {
-  return (
-    <div className="flex shrink-0 items-center gap-3 border-b border-neutral-200 bg-white px-4 py-2 dark:border-white/10 dark:bg-neutral-950">
-      <button
-        type="button"
-        onClick={onExit}
-        className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" />
-        Trang chủ
-      </button>
-      <span className="text-sm text-muted-foreground">
-        {domainLabel} / {specialtyLabel}
-      </span>
+      <div className="flex-1 overflow-hidden">{body}</div>
     </div>
   );
 }
 
 function UnavailableDomain({
   domainLabel,
-  specialtyLabel,
   onExit,
 }: {
   readonly domainLabel: string;
-  readonly specialtyLabel: string;
   readonly onExit: () => void;
 }) {
   return (
-    <div className="flex h-dvh flex-col">
-      <TopBar
-        domainLabel={domainLabel}
-        specialtyLabel={specialtyLabel}
-        onExit={onExit}
-      />
+    <div className="flex h-full flex-col">
+      <InterviewSessionBar label={domainLabel} onExit={onExit} />
+
       <div className="flex flex-1 items-center justify-center px-6">
         <div className="max-w-sm rounded-2xl border border-quest-surface-border bg-card p-6 text-center shadow-[0_8px_24px_-12px_var(--quest-glow)]">
           <h2 className="text-base font-bold">Lĩnh vực chưa khả dụng</h2>

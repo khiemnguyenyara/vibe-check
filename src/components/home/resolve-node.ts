@@ -14,8 +14,7 @@ import type { GuestState, ResolvedNode } from "./types";
 export function resolveNode(
   domain: DomainConfig,
   specialty: Specialty,
-  guest: GuestState,
-  atGuestLimit: boolean
+  guest: GuestState
 ): ResolvedNode {
   const record = guest.progress.get(progressKey(domain.id, specialty.id));
 
@@ -25,16 +24,6 @@ export function resolveNode(
       specialty,
       state: "locked",
       lockedReason: "Nội dung đang được hoàn thiện.",
-    };
-  }
-
-  if (atGuestLimit) {
-    return {
-      domain,
-      specialty,
-      state: "locked",
-      record,
-      lockedReason: "Đã dùng hết lượt miễn phí.",
     };
   }
 

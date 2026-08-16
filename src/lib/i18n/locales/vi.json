@@ -2,7 +2,24 @@
   "header": {
     "brand": "Vibe Check",
     "fieldsNavLabel": "Lĩnh vực nghề nghiệp",
-    "localeToggleLabel": "Chuyển ngôn ngữ"
+    "localeToggleLabel": "Chuyển ngôn ngữ",
+    "homeNav": "Trang chủ",
+    "jobsNav": "Ngành nghề",
+    "jobsViewAll": "Xem tất cả lĩnh vực",
+    "aboutNav": "Giới thiệu",
+    "getStartedCta": "Bắt đầu",
+    "mobileMenuAria": "Mở menu"
+  },
+  "getStarted": {
+    "title": "Vài câu hỏi nhanh",
+    "roleLabel": "Bạn đang làm công việc / ngành gì?",
+    "rolePlaceholder": "Chọn ngành của bạn…",
+    "roleOther": "Khác",
+    "roleOtherPlaceholder": "Vui lòng nêu rõ…",
+    "reasonLabel": "Bạn ghé thăm Vibe Check để làm gì?",
+    "reasonInterview": "Chuẩn bị phỏng vấn",
+    "reasonOther": "Chỉ ghé xem thử",
+    "submit": "Bắt đầu luyện tập"
   },
   "footer": {
     "tagline": "Luyện phỏng vấn cùng AI",
@@ -11,24 +28,33 @@
   },
   "home": {
     "hero": {
-      "slides": [
-        {
-          "title": "Luyện phỏng vấn cùng AI",
-          "body": "Câu hỏi bám sát đúng công việc bạn đang ứng tuyển."
-        },
-        {
-          "title": "Chấm điểm ngay sau mỗi câu",
-          "body": "Biết ngay điểm mạnh và phần kiến thức còn thiếu."
-        },
-        {
-          "title": "Theo dõi tiến bộ từng phiên",
-          "body": "Điểm cao nhất của bạn được lưu lại qua các lần luyện."
-        }
-      ]
+      "badge": "Luyện mọi lúc cùng Mads",
+      "titleLead": "Nâng trình cùng",
+      "titleAccent": "Mads",
+      "body": "Câu hỏi bám sát đúng công việc bạn ứng tuyển, chấm điểm ngay sau khi trả lời.",
+      "searchPlaceholder": "Tìm chuyên môn — Frontend, SEO, Product…",
+      "searchCta": "Tìm kiếm",
+      "searchAria": "Tìm chuyên môn"
     },
-    "guestLimit": {
-      "title": "Bạn đã dùng hết {count} phiên miễn phí",
-      "body": "Đăng nhập để tiếp tục luyện tập không giới hạn và giữ lại toàn bộ tiến độ. Tính năng đăng nhập sẽ sớm ra mắt."
+    "stats": {
+      "specialtiesLabel": "Chuyên môn",
+      "specialtiesCaption": "Sẵn sàng luyện tập ngay.",
+      "domainsLabel": "Lĩnh vực nghề",
+      "domainsCaption": "Từ kỹ thuật đến sản phẩm và thiết kế.",
+      "bookingTitle": "Bắt đầu phiên đầu tiên miễn phí",
+      "bookingBody": "Không cần đăng ký — vào luyện phỏng vấn và nhận điểm ngay lập tức.",
+      "bookingCta": "Bắt đầu ngay",
+      "bannerLine1": "MỞ KHOÁ TIỀM NĂNG",
+      "bannerLine2": "PHỎNG VẤN CỦA BẠN",
+      "bannerCta": "Khám phá mọi lĩnh vực"
+    },
+    "coaches": {
+      "filterAll": "Tất cả",
+      "cta": "Bắt đầu",
+      "lockedCta": "Đã khoá",
+      "comingSoonCta": "Sắp ra mắt",
+      "showMore": "Khám phá mọi lĩnh vực",
+      "empty": "Không có chuyên môn nào khớp với tìm kiếm."
     },
     "currentTrack": {
       "label": "Chuyên môn của bạn",
@@ -41,11 +67,25 @@
       "comingSoon": "Sắp ra mắt"
     },
     "sections": {
+      "yourSpecialtyTitle": "Chuyên môn của bạn?",
       "otherFieldsTitle": "Lĩnh vực khác",
       "chooseFieldTitle": "Chọn chuyên môn của bạn",
       "otherFieldsBody": "Mỗi lĩnh vực là một hướng nghề riêng — chỉ chọn nếu bạn muốn luyện thêm mảng khác.",
       "chooseFieldBody": "Chọn đúng công việc bạn đang ứng tuyển để câu hỏi sát với thực tế.",
       "showMore": "Xem thêm lĩnh vực?"
     }
+  },
+  "fields": {
+    "back": "Về trang chủ",
+    "title": "Tất cả lĩnh vực",
+    "body": "Chọn đúng công việc bạn đang ứng tuyển để câu hỏi sát với thực tế.",
+    "viewSpecialties": "Xem chuyên môn",
+    "backToAll": "Tất cả lĩnh vực",
+    "filterTitle": "Bộ lọc",
+    "filterSearchPlaceholder": "Tìm lĩnh vực…",
+    "filterSearchAria": "Tìm lĩnh vực",
+    "filterStatusAll": "Tất cả",
+    "filterStatusAvailable": "Đã mở",
+    "empty": "Không có lĩnh vực nào khớp với bộ lọc."
   }
 }

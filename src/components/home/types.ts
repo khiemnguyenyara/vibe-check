@@ -7,14 +7,12 @@ import type {
 } from "@/lib/session/progress";
 
 export interface GuestState {
-  readonly count: number;
   readonly progress: ProgressIndex;
   readonly track: CurrentTrack | null;
   readonly loaded: boolean;
 }
 
 export const EMPTY_GUEST: GuestState = {
-  count: 0,
   progress: new Map(),
   track: null,
   loaded: false,

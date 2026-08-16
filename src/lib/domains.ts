@@ -51,6 +51,8 @@ export interface DomainConfig {
   readonly id: string;
   readonly label: string;
   readonly sectionTitle: string;
+  /** One line, shown on the /fields carousel card. */
+  readonly description: string;
   readonly icon: LucideIcon;
   readonly theme: DomainTheme;
   readonly specialties: readonly Specialty[];
@@ -63,6 +65,7 @@ export const domains: readonly DomainConfig[] = [
     id: "tech",
     label: "Development",
     sectionTitle: "Công nghệ",
+    description: "Frontend, backend, DevOps — luyện phỏng vấn kỹ thuật thực tế.",
     icon: Code2,
     theme: {
       text: "text-indigo-600",
@@ -104,6 +107,7 @@ export const domains: readonly DomainConfig[] = [
     id: "marketing",
     label: "Marketing",
     sectionTitle: "Marketing",
+    description: "SEO, quảng cáo, content — chiến lược marketing đa kênh.",
     icon: Megaphone,
     theme: {
       text: "text-rose-600",
@@ -145,6 +149,7 @@ export const domains: readonly DomainConfig[] = [
     id: "design",
     label: "Design",
     sectionTitle: "Thiết kế",
+    description: "UI/UX, graphic, motion — tư duy thiết kế trải nghiệm.",
     icon: Palette,
     theme: {
       text: "text-emerald-600",
@@ -189,6 +194,8 @@ export const domains: readonly DomainConfig[] = [
     id: "data",
     label: "Data",
     sectionTitle: "Data & Analytics",
+    description:
+      "Data analyst, engineer, scientist — phân tích và ra quyết định bằng số liệu.",
     icon: BarChart3,
     theme: {
       text: "text-sky-600",
@@ -240,6 +247,8 @@ export const domains: readonly DomainConfig[] = [
     id: "product",
     label: "Product",
     sectionTitle: "Product",
+    description:
+      "Product manager, product owner — dẫn dắt sản phẩm từ ý tưởng đến ra mắt.",
     icon: Boxes,
     theme: {
       text: "text-amber-600",

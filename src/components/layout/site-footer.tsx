@@ -25,7 +25,7 @@ export function SiteFooter() {
         fill
         sizes="100vw"
         aria-hidden
-        className="-z-10 object-cover opacity-15"
+        className="-z-10 object-cover opacity-50"
       />
       <div
         aria-hidden
@@ -34,7 +34,7 @@ export function SiteFooter() {
 
       <div className="mx-auto flex max-w-5xl flex-col items-center gap-3 px-3 py-20 text-center sm:px-4 sm:py-24">
         <Image
-          src="/vibe_check.jpg"
+          src="/vibe-check-mark.png"
           alt={t.header.brand}
           width={40}
           height={40}

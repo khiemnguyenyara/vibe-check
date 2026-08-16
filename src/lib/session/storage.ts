@@ -14,11 +14,6 @@
 
 import type { PersistedSession, SessionSummary, TranscriptTurn } from "./types";
 
-/** PRD §3: login wall triggers upon completing the 3rd session. */
-export const GUEST_SESSION_LIMIT = 3;
-
-/** Unprefixed because the PRD names this key verbatim. */
-const COUNT_KEY = "interview_count";
 const ACTIVE_SESSION_KEY = "vibe-check:active-session";
 const HISTORY_KEY = "vibe-check:session-history";
 
@@ -77,6 +72,17 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
 
+function isExperienceLevel(
+  value: unknown
+): value is PersistedSession["experienceLevel"] {
+  return (
+    value === "junior" ||
+    value === "mid" ||
+    value === "senior" ||
+    value === "staff"
+  );
+}
+
 function isTurn(value: unknown): value is TranscriptTurn {
   if (!isRecord(value)) return false;
   const { id, question, answer, evaluation } = value;
@@ -88,7 +94,14 @@ function isTurn(value: unknown): value is TranscriptTurn {
   if (typeof question.id !== "string") return false;
   if (typeof question.prompt !== "string") return false;
   if (typeof question.maxScore !== "number") return false;
-  if (!isStringArray(question.expectedKeyPoints)) return false;
+  if (question.type === "multiple_choice") {
+    if (!isStringArray(question.options)) return false;
+  } else if (question.type === "open") {
+    if (!isStringArray(question.expectedKeyPoints)) return false;
+    if (typeof question.requiresPractice !== "boolean") return false;
+  } else {
+    return false;
+  }
 
   if (evaluation !== null) {
     if (!isRecord(evaluation)) return false;
@@ -113,6 +126,7 @@ function isPersistedSession(value: unknown): value is PersistedSession {
     turns,
     pendingAnswer,
     sessionLength,
+    experienceLevel,
   } = value;
 
   return (
@@ -128,6 +142,7 @@ function isPersistedSession(value: unknown): value is PersistedSession {
       pendingAnswer === null ||
       typeof pendingAnswer === "string") &&
     (sessionLength === undefined || typeof sessionLength === "number") &&
+    (experienceLevel === undefined || isExperienceLevel(experienceLevel)) &&
     Array.isArray(turns) &&
     turns.every(isTurn)
   );
@@ -172,6 +187,7 @@ export function loadActiveSession(): PersistedSession | null {
     ...parsed,
     pendingAnswer: parsed.pendingAnswer ?? null,
     sessionLength: parsed.sessionLength ?? 0,
+    experienceLevel: parsed.experienceLevel ?? "mid",
   };
 }
 
@@ -181,26 +197,6 @@ export function saveActiveSession(session: PersistedSession): void {
 
 export function clearActiveSession(): void {
   removeRaw("session", ACTIVE_SESSION_KEY);
-}
-
-/* ------------------------------------------------------------------ */
-/* Guest counter — localStorage                                        */
-/* ------------------------------------------------------------------ */
-
-export function readInterviewCount(): number {
-  const parsed = readRaw("local", COUNT_KEY);
-  // Tolerate the plain-number string an earlier build (or a human) may have
-  // written: JSON.parse("3") yields 3, so both encodings land here.
-  if (typeof parsed !== "number" || !Number.isFinite(parsed) || parsed < 0) {
-    return 0;
-  }
-  return Math.floor(parsed);
-}
-
-export function incrementInterviewCount(): number {
-  const next = readInterviewCount() + 1;
-  writeRaw("local", COUNT_KEY, next);
-  return next;
 }
 
 /* ------------------------------------------------------------------ */

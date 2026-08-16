@@ -19,13 +19,30 @@ export interface AnswerEvaluation {
   readonly knowledgeGaps: readonly string[];
 }
 
-/** A question as Core sees it — domain-neutral. */
-export interface InterviewQuestion {
+/** Free-text question, graded against a rubric of expected key points. */
+export interface OpenInterviewQuestion {
   readonly id: string;
+  readonly type: "open";
   readonly prompt: string;
   readonly expectedKeyPoints: readonly string[];
   readonly maxScore: number;
+  /** Whether the code-scratchpad Workspace pane is relevant to this question. */
+  readonly requiresPractice: boolean;
 }
+
+/** Single-select question, graded by exact match against a server-only answer key. */
+export interface MultipleChoiceInterviewQuestion {
+  readonly id: string;
+  readonly type: "multiple_choice";
+  readonly prompt: string;
+  readonly options: readonly string[];
+  readonly maxScore: number;
+}
+
+/** A question as Core sees it — domain-neutral. */
+export type InterviewQuestion =
+  | OpenInterviewQuestion
+  | MultipleChoiceInterviewQuestion;
 
 /** One question/answer exchange. `answer`/`evaluation` are null until answered. */
 export interface TranscriptTurn {
@@ -59,6 +76,13 @@ export interface PersistedSession {
    * the next response arrives.
    */
   readonly sessionLength: number;
+  /**
+   * The level chosen before this session started (see the interview
+   * level-picker step). Persisted so a resumed session keeps drawing from
+   * the same question bank rather than mixing levels mid-session — the tech
+   * module's server keys its question bank by this value.
+   */
+  readonly experienceLevel: InterviewSessionContextShape["experienceLevel"];
 }
 
 /** A finished session, appended to localStorage history (US3). */

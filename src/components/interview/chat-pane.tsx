@@ -1,15 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Mic, RotateCcw, Send } from "lucide-react";
+import Image from "next/image";
+import { Check, Mic, RotateCcw, Send } from "lucide-react";
 
 import { ActionBubble } from "@/components/ui/action-bubble";
 import { Button } from "@/components/ui/button";
-import { Mascot } from "@/components/mascot/mascot";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { avatarUrl } from "@/lib/avatar";
+import { cn } from "@/lib/utils";
 import type { TranscriptTurn } from "@/lib/session/types";
 
+import { getPendingQuestion } from "./current-question";
 import { EvaluationCard } from "./evaluation-card";
 
 /**
@@ -21,6 +24,9 @@ import { EvaluationCard } from "./evaluation-card";
 
 interface ChatPaneProps {
   readonly title: string;
+  /** Seeds the interviewer persona avatar — same seed CoachCard uses, so
+   * it's the same character the candidate picked on the home page. */
+  readonly avatarSeed: string;
   readonly turns: readonly TranscriptTurn[];
   readonly isFetchingNext: boolean;
   readonly isEvaluating: boolean;
@@ -31,6 +37,16 @@ interface ChatPaneProps {
   readonly pendingAnswer: string | null;
   readonly onSubmitAnswer: (answer: string) => void;
   readonly onRetry: () => void;
+}
+
+/** The interviewer's face beside their own bubbles — same character seed
+ * CoachCard uses, so it's the same character the candidate picked. */
+function PersonaAvatar({ seed }: { readonly seed: string }) {
+  return (
+    <div className="relative size-8 shrink-0 overflow-hidden rounded-full border border-quest-surface-border bg-quest-surface">
+      <Image src={avatarUrl(seed)} alt="" fill sizes="32px" className="object-cover" />
+    </div>
+  );
 }
 
 function AiBubble({ content }: { content: string }) {
@@ -45,6 +61,62 @@ function UserBubble({ content }: { content: string }) {
   return (
     <div className="max-w-[85%] self-end whitespace-pre-wrap rounded-2xl rounded-br-sm bg-interview-accent px-4 py-3 text-sm leading-relaxed text-interview-accent-foreground shadow-[0_8px_24px_-12px_var(--quest-glow)]">
       {content}
+    </div>
+  );
+}
+
+/**
+ * Multiple-choice options, rendered where a free-text answer bubble would
+ * otherwise go. Interactive only for the trailing pending turn; read-only
+ * and highlighting the chosen option for past turns. The check glyph is the
+ * real selected-state signal, not the border color alone (§11 colour
+ * independence — same reasoning level-picker.tsx follows for its cards).
+ */
+function OptionsList({
+  options,
+  selectedAnswer,
+  interactive,
+  onSelect,
+}: {
+  readonly options: readonly string[];
+  readonly selectedAnswer: string | null;
+  readonly interactive: boolean;
+  readonly onSelect: (option: string) => void;
+}) {
+  return (
+    <div className="flex max-w-[85%] flex-col gap-2 self-start">
+      {options.map((option) => {
+        const isSelected = selectedAnswer === option;
+        return (
+          <button
+            key={option}
+            type="button"
+            disabled={!interactive}
+            onClick={() => onSelect(option)}
+            aria-pressed={isSelected}
+            className={cn(
+              "flex items-center justify-between gap-2 rounded-2xl border p-3 text-left text-sm",
+              "outline-none transition-[box-shadow,transform,border-color]",
+              "focus-visible:ring-2 focus-visible:ring-interview-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              "motion-reduce:transition-none",
+              "border-quest-surface-border bg-quest-surface",
+              interactive &&
+                "hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-10px_var(--quest-glow)] motion-reduce:hover:translate-y-0",
+              !interactive && "cursor-default",
+              isSelected &&
+                "border-interview-accent/50 shadow-[0_10px_30px_-12px_var(--quest-glow)]"
+            )}
+          >
+            <span className="text-card-foreground">{option}</span>
+            {isSelected && (
+              <Check
+                className="size-4 shrink-0 text-interview-accent-text"
+                aria-hidden
+              />
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -96,6 +168,7 @@ function ErrorBubble({
 
 export function ChatPane({
   title,
+  avatarSeed,
   turns,
   isFetchingNext,
   isEvaluating,
@@ -107,9 +180,16 @@ export function ChatPane({
   onRetry,
 }: ChatPaneProps) {
   const [answer, setAnswer] = useState("");
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+
+  const pendingQuestion = getPendingQuestion(turns);
+  const isMultipleChoice = pendingQuestion?.type === "multiple_choice";
 
   const isBusy = isFetchingNext || isEvaluating;
-  const canSend = !isBusy && !isReadOnly && answer.trim().length > 0;
+  const canSend =
+    !isBusy &&
+    !isReadOnly &&
+    (isMultipleChoice ? selectedOption !== null : answer.trim().length > 0);
 
   const questionsAsked = turns.length;
   const progress =
@@ -122,8 +202,14 @@ export function ChatPane({
 
   function handleSend() {
     if (!canSend) return;
-    onSubmitAnswer(answer);
-    setAnswer("");
+    if (isMultipleChoice) {
+      if (!selectedOption) return;
+      onSubmitAnswer(selectedOption);
+      setSelectedOption(null);
+    } else {
+      onSubmitAnswer(answer);
+      setAnswer("");
+    }
   }
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -135,55 +221,55 @@ export function ChatPane({
 
   return (
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-neutral-100 dark:bg-neutral-950">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 overflow-hidden"
-      >
-        <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-interview-accent/25 blur-3xl" />
-        <div className="absolute -bottom-24 -right-16 h-72 w-72 rounded-full bg-interview-accent/15 blur-3xl" />
-      </div>
-
-      <header className="relative z-10 flex shrink-0 items-center justify-between gap-4 border-b border-quest-surface-border bg-background/90 px-5 py-4 backdrop-blur-md">
-        <h1 className="truncate text-base font-bold tracking-tight sm:text-lg">
-          {title}
-        </h1>
-        <div className="flex shrink-0 flex-col items-end gap-1">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            {/* sessionLength is authoritative from the server and unknown
-                until the first response — show a bare count rather than the
-                nonsense "Câu 1/0" while it is still 0. */}
-            Câu {Math.max(questionsAsked, 1)}
-            {sessionLength > 0 ? `/${sessionLength}` : ""}
-          </span>
-          <div className="h-1.5 w-28 overflow-hidden rounded-full bg-foreground/10">
-            <div
-              className="h-full rounded-full bg-interview-accent transition-all duration-500 ease-out"
-              style={{ width: `${progress * 100}%` }}
-            />
-          </div>
-        </div>
-      </header>
-
       <div className="relative z-10 flex-1 overflow-y-auto px-4 py-6 sm:px-8">
         <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-          {turns.map((turn) => (
-            <div key={turn.id} className="flex flex-col gap-4">
-              <AiBubble content={turn.question.prompt} />
-              {turn.answer !== null && <UserBubble content={turn.answer} />}
-              {turn.evaluation !== null && (
-                <EvaluationCard evaluation={turn.evaluation} />
-              )}
-            </div>
-          ))}
+          {turns.map((turn) => {
+            const isPending = turn.answer === null;
+            return (
+              <div key={turn.id} className="flex flex-col gap-4">
+                <div className="flex items-start gap-2">
+                  <PersonaAvatar seed={avatarSeed} />
+                  <AiBubble content={turn.question.prompt} />
+                </div>
+                {turn.question.type === "multiple_choice" ? (
+                  <OptionsList
+                    options={turn.question.options}
+                    selectedAnswer={isPending ? selectedOption : turn.answer}
+                    interactive={isPending && !isReadOnly && !isBusy}
+                    onSelect={setSelectedOption}
+                  />
+                ) : (
+                  turn.answer !== null && <UserBubble content={turn.answer} />
+                )}
+                {turn.evaluation !== null && (
+                  <EvaluationCard evaluation={turn.evaluation} />
+                )}
+              </div>
+            );
+          })}
           {/* Held outside the transcript until graded, so a retry replays an
               identical request — see the Session Engine. */}
           {pendingAnswer !== null && (
             <>
-              <UserBubble content={pendingAnswer} />
+              {pendingQuestion?.type === "multiple_choice" ? (
+                <OptionsList
+                  options={pendingQuestion.options}
+                  selectedAnswer={pendingAnswer}
+                  interactive={false}
+                  onSelect={() => {}}
+                />
+              ) : (
+                <UserBubble content={pendingAnswer} />
+              )}
               {isEvaluating && <PendingEvaluation />}
             </>
           )}
-          {isFetchingNext && <PendingAiBubble />}
+          {isFetchingNext && (
+            <div className="flex items-start gap-2">
+              <PersonaAvatar seed={avatarSeed} />
+              <PendingAiBubble />
+            </div>
+          )}
           {error && (
             <ErrorBubble
               message={error}
@@ -199,36 +285,34 @@ export function ChatPane({
         </div>
       </div>
 
-      <div
-        className="pointer-events-none absolute bottom-24 right-4 z-20 hidden min-[380px]:block"
-        aria-hidden
-      >
-        <Mascot
-          state={isEvaluating ? "thinking" : isReadOnly ? "resting" : "idle"}
-          size={52}
-        />
-      </div>
-
-      <footer className="relative z-10 shrink-0 border-t border-quest-surface-border bg-background/95 p-4 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur-md sm:px-8">
+      <footer className="relative z-10 shrink-0 border-t border-quest-surface-border bg-background p-4 sm:px-8">
         <div className="mx-auto flex w-full max-w-2xl items-end gap-2">
-          <Textarea
-            value={answer}
-            onChange={(event) => setAnswer(event.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Chia sẻ cách bạn giải quyết vấn đề này..."
-            disabled={isBusy || isReadOnly}
-            className="max-h-40 min-h-12 flex-1 resize-none rounded-sm border border-quest-surface-border bg-background px-3 py-2.5 shadow-none focus-visible:border-interview-accent focus-visible:ring-0"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            disabled
-            aria-label="Trả lời bằng giọng nói (sắp ra mắt)"
-            className="size-11 shrink-0 rounded-full border border-quest-surface-border bg-background text-foreground/70"
-          >
-            <Mic className="size-4" />
-          </Button>
+          {isMultipleChoice ? (
+            <p className="flex min-h-12 flex-1 items-center text-sm text-muted-foreground">
+              Chọn một đáp án ở trên rồi bấm gửi.
+            </p>
+          ) : (
+            <>
+              <Textarea
+                value={answer}
+                onChange={(event) => setAnswer(event.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Chia sẻ cách bạn giải quyết vấn đề này..."
+                disabled={isBusy || isReadOnly}
+                className="max-h-40 min-h-12 flex-1 resize-none rounded-sm border border-quest-surface-border bg-background px-3 py-2.5 shadow-none focus-visible:border-interview-accent focus-visible:ring-0"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                disabled
+                aria-label="Trả lời bằng giọng nói (sắp ra mắt)"
+                className="size-11 shrink-0 rounded-full border border-quest-surface-border bg-background text-foreground/70"
+              >
+                <Mic className="size-4" />
+              </Button>
+            </>
+          )}
           <ActionBubble
             state={
               isReadOnly || isBusy ? "disabled" : canSend ? "ready" : "disabled"

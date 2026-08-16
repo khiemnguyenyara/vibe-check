@@ -1,6 +1,10 @@
 import "server-only";
 
-import type { AnswerEvaluation, InterviewQuestion } from "@/lib/session/types";
+import type {
+  AnswerEvaluation,
+  MultipleChoiceInterviewQuestion,
+  OpenInterviewQuestion,
+} from "@/lib/session/types";
 
 /**
  * Deterministic mock scorer. Logic unchanged from the previous client-side
@@ -81,7 +85,7 @@ function summarize(ratio: number): string {
 }
 
 export function scoreAnswer(
-  question: InterviewQuestion,
+  question: OpenInterviewQuestion,
   answer: string
 ): AnswerEvaluation {
   const answerTokens = new Set(tokenize(answer));
@@ -113,5 +117,31 @@ export function scoreAnswer(
     summary: summarize(ratio),
     strengths,
     knowledgeGaps,
+  };
+}
+
+/**
+ * Deterministic exact-match grading — no keyword coverage, since a
+ * multiple-choice answer has no rubric to partially satisfy. `strengths`/
+ * `knowledgeGaps` stay empty rather than repurposed: EvaluationCard's
+ * "Đã đề cập"/"Còn thiếu" headers don't fit "here's the one correct option",
+ * so the reveal lives entirely in `summary`.
+ */
+export function scoreMultipleChoice(
+  question: MultipleChoiceInterviewQuestion,
+  answer: string,
+  correctOptionIndex: number
+): AnswerEvaluation {
+  const correctOption = question.options[correctOptionIndex];
+  const isCorrect = answer.trim() === correctOption;
+
+  return {
+    score: isCorrect ? question.maxScore : 0,
+    maxScore: question.maxScore,
+    summary: isCorrect
+      ? "Chính xác!"
+      : `Chưa đúng. Đáp án đúng là: "${correctOption}".`,
+    strengths: [],
+    knowledgeGaps: [],
   };
 }

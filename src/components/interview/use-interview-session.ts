@@ -5,10 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   appendHistory,
   clearActiveSession,
-  incrementInterviewCount,
   loadActiveSession,
   loadHistory,
-  readInterviewCount,
   saveActiveSession,
 } from "@/lib/session/storage";
 import type {
@@ -54,10 +52,11 @@ export interface InterviewSessionState {
   readonly error: string | null;
   /** Authoritative, from the server. 0 until the first response lands. */
   readonly sessionLength: number;
-  readonly interviewCount: number;
   readonly summary: SessionSummary | null;
   /** Submitted, awaiting a verdict — rendered optimistically by the chat. */
   readonly pendingAnswer: string | null;
+  /** When this session started — null until the bootstrap effect resolves. */
+  readonly startedAt: string | null;
   submitAnswer: (answer: string) => Promise<void>;
   /** Re-send the last failed turn. Byte-identical to the original request. */
   retry: () => Promise<void>;
@@ -109,7 +108,6 @@ export function useInterviewSession({
   const [status, setStatus] = useState<SessionStatus>("idle");
   const [pending, setPending] = useState<Pending>(null);
   const [error, setError] = useState<string | null>(null);
-  const [interviewCount, setInterviewCount] = useState(0);
   const [summary, setSummary] = useState<SessionSummary | null>(null);
 
   /** Single write point, so no transcript mutation can skip persistence. */
@@ -123,16 +121,11 @@ export function useInterviewSession({
     const built = buildSummary(finished, completedAt);
 
     // Idempotency guard: without it, a refresh on the summary screen would
-    // re-append history and burn one of the guest's three sessions.
+    // re-append a duplicate history entry.
     const alreadyRecorded = loadHistory().some(
       (entry) => entry.sessionId === finished.sessionId
     );
-    if (alreadyRecorded) {
-      setInterviewCount(readInterviewCount());
-    } else {
-      appendHistory(built);
-      setInterviewCount(incrementInterviewCount());
-    }
+    if (!alreadyRecorded) appendHistory(built);
 
     clearActiveSession();
     setSession({ ...finished, completedAt, pendingAnswer: null });
@@ -245,7 +238,6 @@ export function useInterviewSession({
     if (bootstrapped.current || !service) return;
     bootstrapped.current = true;
 
-    setInterviewCount(readInterviewCount());
     setStatus("in_progress");
 
     const stored = loadActiveSession();
@@ -272,8 +264,9 @@ export function useInterviewSession({
       turns: [],
       pendingAnswer: null,
       sessionLength: 0,
+      experienceLevel: context.experienceLevel,
     });
-  }, [moduleId, specialtyId, service, submitTurn]);
+  }, [moduleId, specialtyId, service, submitTurn, context.experienceLevel]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   /* ---------------------------------------------------------------- */
@@ -305,9 +298,9 @@ export function useInterviewSession({
     isEvaluating: pending === "turn",
     error,
     sessionLength: session?.sessionLength ?? 0,
-    interviewCount,
     summary,
     pendingAnswer: session?.pendingAnswer ?? null,
+    startedAt: session?.startedAt ?? null,
     submitAnswer,
     retry,
   };
