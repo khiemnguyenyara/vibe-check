@@ -90,7 +90,7 @@ Là chủ sản phẩm, tôi muốn giới hạn khách dùng thử 3 phiên r�
 - AC1: Bộ đếm nằm ở `localStorage` khoá `interview_count`, tăng đúng 1 cho mỗi phiên hoàn thành.
 - AC2: Refresh màn hình tổng kết **không** làm bộ đếm tăng thêm (idempotent theo `sessionId`).
 - AC3: Hoàn thành phiên thứ 3 hiển thị login wall không thể đóng bằng Escape hay click ra ngoài; màn hình tổng kết vẫn đọc được phía sau.
-- AC4: Khi đã chạm giới hạn, thẻ chuyên môn ở trang chủ không khởi tạo phiên mới nữa.
+- AC4: Khi đã chạm giới hạn, thẻ chuyên môn ở trang chọn chuyên môn (`/fields/[domain]`) không khởi tạo phiên mới nữa.
 
 ## 3. Fast-follow
 

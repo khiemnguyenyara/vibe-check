@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Manrope } from "next/font/google";
 import "./globals.css";
 
 import { LocaleProvider } from "@/lib/i18n/locale-context";
@@ -12,6 +12,11 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin", "vietnamese"],
 });
 
 export const metadata: Metadata = {
@@ -35,7 +40,7 @@ export default function RootLayout({
       lang="vi"
       suppressHydrationWarning
       data-scroll-behavior="smooth"
-      className={`${geistSans.variable} ${geistMono.variable} h-full scroll-smooth antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} h-full scroll-smooth antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <LocaleProvider>{children}</LocaleProvider>

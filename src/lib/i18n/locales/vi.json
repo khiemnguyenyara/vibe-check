@@ -27,52 +27,20 @@
     "copyright": "© 2026 Vibe Check"
   },
   "home": {
-    "hero": {
-      "badge": "Luyện mọi lúc cùng Mads",
-      "titleLead": "Nâng trình cùng",
-      "titleAccent": "Mads",
-      "body": "Câu hỏi bám sát đúng công việc bạn ứng tuyển, chấm điểm ngay sau khi trả lời.",
-      "searchPlaceholder": "Tìm chuyên môn — Frontend, SEO, Product…",
-      "searchCta": "Tìm kiếm",
-      "searchAria": "Tìm chuyên môn"
+    "title": "Bạn muốn làm gì hôm nay?",
+    "subtitle": "Chọn một lựa chọn bên dưới để bắt đầu.",
+    "startInterview": {
+      "title": "Bắt đầu phỏng vấn ngay",
+      "body": "Chọn đúng ngành và chuyên môn của bạn, rồi vào luyện phỏng vấn ngay lập tức.",
+      "cta": "Bắt đầu ngay"
     },
-    "stats": {
-      "specialtiesLabel": "Chuyên môn",
-      "specialtiesCaption": "Sẵn sàng luyện tập ngay.",
-      "domainsLabel": "Lĩnh vực nghề",
-      "domainsCaption": "Từ kỹ thuật đến sản phẩm và thiết kế.",
-      "bookingTitle": "Bắt đầu phiên đầu tiên miễn phí",
-      "bookingBody": "Không cần đăng ký — vào luyện phỏng vấn và nhận điểm ngay lập tức.",
-      "bookingCta": "Bắt đầu ngay",
-      "bannerLine1": "MỞ KHOÁ TIỀM NĂNG",
-      "bannerLine2": "PHỎNG VẤN CỦA BẠN",
-      "bannerCta": "Khám phá mọi lĩnh vực"
-    },
-    "coaches": {
-      "filterAll": "Tất cả",
-      "cta": "Bắt đầu",
-      "lockedCta": "Đã khoá",
-      "comingSoonCta": "Sắp ra mắt",
-      "showMore": "Khám phá mọi lĩnh vực",
-      "empty": "Không có chuyên môn nào khớp với tìm kiếm."
-    },
-    "currentTrack": {
-      "label": "Chuyên môn của bạn",
-      "bestScore": "Điểm cao nhất",
-      "sessionCount": "Số phiên",
-      "mastered": "Bạn đã thành thạo chuyên môn này",
-      "resume": "Luyện tiếp {specialty}"
+    "improveCv": {
+      "title": "Cải thiện CV của bạn",
+      "body": "AI chấm và gợi ý chỉnh sửa CV, giúp hồ sơ của bạn nổi bật hơn.",
+      "badge": "Sắp ra mắt"
     },
     "field": {
       "comingSoon": "Sắp ra mắt"
-    },
-    "sections": {
-      "yourSpecialtyTitle": "Chuyên môn của bạn?",
-      "otherFieldsTitle": "Lĩnh vực khác",
-      "chooseFieldTitle": "Chọn chuyên môn của bạn",
-      "otherFieldsBody": "Mỗi lĩnh vực là một hướng nghề riêng — chỉ chọn nếu bạn muốn luyện thêm mảng khác.",
-      "chooseFieldBody": "Chọn đúng công việc bạn đang ứng tuyển để câu hỏi sát với thực tế.",
-      "showMore": "Xem thêm lĩnh vực?"
     }
   },
   "fields": {

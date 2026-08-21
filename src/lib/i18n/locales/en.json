@@ -22,57 +22,25 @@
     "submit": "Start practicing"
   },
   "footer": {
-    "tagline": "Practice interviews with AI",
+    "tagline": "Practice interviews with Mads",
     "description": "Pick the right specialty, answer like a real interview, and get your score with feedback right after every question.",
     "copyright": "© 2026 Vibe Check"
   },
   "home": {
-    "hero": {
-      "badge": "Practice anytime with mad family",
-      "titleLead": "Level up with",
-      "titleAccent": "Mads",
-      "body": "Get questions tailored to your exact role, and see your score the moment you answer.",
-      "searchPlaceholder": "Search a role — Frontend, SEO, Product…",
-      "searchCta": "Search",
-      "searchAria": "Search specialties"
+    "title": "What do you want to do today?",
+    "subtitle": "Pick one to get started.",
+    "startInterview": {
+      "title": "Start interview now",
+      "body": "Pick your field and specialty, then jump straight into a mock interview.",
+      "cta": "Start now"
     },
-    "stats": {
-      "specialtiesLabel": "Specialties",
-      "specialtiesCaption": "Ready to practice right now.",
-      "domainsLabel": "Career fields",
-      "domainsCaption": "From engineering to product and design.",
-      "bookingTitle": "Book your first free session",
-      "bookingBody": "No sign-up needed — jump into a mock interview and get scored instantly.",
-      "bookingCta": "Get started",
-      "bannerLine1": "UNLOCK YOUR",
-      "bannerLine2": "INTERVIEW POTENTIAL",
-      "bannerCta": "Explore all fields"
-    },
-    "coaches": {
-      "filterAll": "All",
-      "cta": "Start",
-      "lockedCta": "Locked",
-      "comingSoonCta": "Coming soon",
-      "showMore": "Explore all fields",
-      "empty": "No specialties match your search."
-    },
-    "currentTrack": {
-      "label": "Your specialty",
-      "bestScore": "Best score",
-      "sessionCount": "Sessions",
-      "mastered": "You've mastered this specialty",
-      "resume": "Keep practicing {specialty}"
+    "improveCv": {
+      "title": "Improve your CV",
+      "body": "AI-scored feedback and rewrite suggestions to make your resume stand out.",
+      "badge": "Coming soon"
     },
     "field": {
       "comingSoon": "Coming soon"
-    },
-    "sections": {
-      "yourSpecialtyTitle": "Your specialty?",
-      "otherFieldsTitle": "Other fields",
-      "chooseFieldTitle": "Choose your specialty",
-      "otherFieldsBody": "Each field is its own career path — only pick one if you want to practice something else.",
-      "chooseFieldBody": "Pick the exact job you're applying for so the questions match reality.",
-      "showMore": "Explore more fields?"
     }
   },
   "fields": {

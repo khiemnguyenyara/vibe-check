@@ -2,7 +2,7 @@
 
 **Status:** Source of Truth — §2.3 và §4 đã bị thay thế
 **Owner:** Product Architecture
-**Last updated:** 2026-08-02
+**Last updated:** 2026-08-21 — thêm §2.4 (quy ước tách style ra file `*.styles.ts`)
 **Thay thế một phần:** [`specs/003-ui-ux-blueprint.md`](../specs/003-ui-ux-blueprint.md) §3 thay thế phần xử lý thị giác ở §2.3 và §4 dưới đây (neo-brutalism → glass/gamified, đã triển khai 2026-08-02). **Vẫn còn hiệu lực:** §2.2 quy tắc 1–3, §3 (quyền sở hữu Chat/Workspace pane và responsive), §5 (accessibility, được mở rộng ở specs/003 §11).
 
 ## 1. Triết lý thiết kế
@@ -29,6 +29,33 @@ Nguyên tắc: **domain module không bao giờ tự quyết định layout tổ
 ### 2.3. Thiết lập
 
 Chạy `npx shadcn@latest init` và thêm component theo nhu cầu (`npx shadcn@latest add button dialog tabs scroll-area`) trước khi bắt đầu code UI. Kết quả sinh ra nằm trong `src/components/ui/`, cấu hình trong `components.json` ở root.
+
+### 2.4. Tách style ra file `*.styles.ts`
+
+**Thêm 2026-08-21.** Chuỗi Tailwind class không được viết trực tiếp (inline) trong JSX của component hay page — kể cả một chuỗi ngắn. Style sống trong một file riêng cạnh file component/page, cùng tên, hậu tố `.styles.ts`:
+
+```
+src/components/home/launcher-card.tsx        → launcher-card.styles.ts
+src/components/layout/site-footer.tsx        → site-footer.styles.ts
+src/app/page.tsx                             → page.styles.ts
+```
+
+- **Không có biến thể (variant):** export một object hằng số, mỗi field là một phần tử trong component.
+  ```ts
+  // launcher-card-list.styles.ts
+  export const launcherCardListStyles = {
+    grid: "grid gap-6 sm:grid-cols-2",
+  } as const;
+  ```
+- **Có biến thể phụ thuộc props** (vd. `disabled`, `variant`, `size`): dùng `cva()` (`class-variance-authority`, đã là dependency qua Shadcn/UI) thay vì `cn(base, condition && "...")` lặp lại toàn bộ base class trong từng nhánh — cùng pattern mà `src/components/ui/button.tsx`, `tabs.tsx`, `glass-card.tsx` đã dùng.
+  ```ts
+  // launcher-card.styles.ts
+  export const launcherCardVariants = cva(base, {
+    variants: { disabled: { true: "...", false: "" } },
+  });
+  ```
+- File `.styles.ts` chỉ export style (string hằng số hoặc hàm `cva`) — không chứa JSX, không chứa logic nghiệp vụ.
+- Áp dụng cho **cả page-level file** (`src/app/**/page.tsx`) lẫn component tái sử dụng — không có ngoại lệ theo loại file.
 
 ## 3. Layout chuẩn: Chat vs. Workspace
 
