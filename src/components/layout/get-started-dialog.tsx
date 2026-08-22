@@ -12,6 +12,7 @@ import {
 } from "@/components/layout/nav-menu";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { domains } from "@/lib/domains";
+import { domainCopy } from "@/lib/i18n/domain-copy";
 import { useLocale } from "@/lib/i18n/locale-context";
 import type { IntakeReason } from "@/lib/session/intake";
 import { saveIntakeProfile } from "@/lib/session/intake";
@@ -67,7 +68,7 @@ function RoleMenu({
                   >
                     <span className="flex items-center gap-2">
                       <Icon className="size-4" aria-hidden />
-                      {domain.sectionTitle}
+                      {domainCopy(t, domain).sectionTitle}
                     </span>
                     <ChevronRight className="size-3.5 text-muted-foreground" aria-hidden />
                   </Menu.SubmenuTrigger>

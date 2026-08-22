@@ -8,9 +8,14 @@ import { riseVariants } from "@/lib/motion/tokens";
 
 import { launcherCardStyles, launcherCardVariants } from "./launcher-card.styles";
 
-/** One choice on the home launcher — a link when `href` is set, a disabled placeholder otherwise. */
+/**
+ * One choice on the home launcher — a link when `href` is set, a button when
+ * `onClick` is set (e.g. opens a picker dialog instead of navigating
+ * straight away), or a disabled placeholder when neither is given.
+ */
 export function LauncherCard({
   href,
+  onClick,
   title,
   body,
   badge,
@@ -18,16 +23,19 @@ export function LauncherCard({
   reduced = false,
 }: {
   readonly href?: string;
+  readonly onClick?: () => void;
   readonly title: string;
   readonly body: string;
   readonly badge?: string;
   readonly delay?: number;
   readonly reduced?: boolean;
 }) {
+  const disabled = !href && !onClick;
+
   const content = (
     <GlassCard
-      variant={href ? "interactive" : "quiet"}
-      className={launcherCardVariants({ disabled: !href })}
+      variant={disabled ? "quiet" : "interactive"}
+      className={launcherCardVariants({ disabled })}
     >
       <div>
         <h2 className={launcherCardStyles.title}>{title}</h2>
@@ -48,6 +56,14 @@ export function LauncherCard({
         <Link href={href} className={launcherCardStyles.link}>
           {content}
         </Link>
+      ) : onClick ? (
+        <button
+          type="button"
+          onClick={onClick}
+          className={launcherCardStyles.trigger}
+        >
+          {content}
+        </button>
       ) : (
         content
       )}

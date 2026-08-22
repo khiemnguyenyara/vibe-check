@@ -41,6 +41,10 @@
     },
     "field": {
       "comingSoon": "Coming soon"
+    },
+    "specialtyPicker": {
+      "title": "What's your job specialty?",
+      "subtitle": "Pick the one that matches your work so practice questions fit the real thing."
     }
   },
   "fields": {
@@ -54,6 +58,28 @@
     "filterSearchAria": "Search fields",
     "filterStatusAll": "All",
     "filterStatusAvailable": "Available",
-    "empty": "No fields match your filters."
+    "empty": "No fields match your filters.",
+    "domains": {
+      "tech": {
+        "sectionTitle": "Development",
+        "description": "Frontend, backend, DevOps — practice real technical interviews."
+      },
+      "marketing": {
+        "sectionTitle": "Marketing",
+        "description": "SEO, ads, content — multi-channel marketing strategy."
+      },
+      "design": {
+        "sectionTitle": "Design",
+        "description": "UI/UX, graphic, motion — experience design thinking."
+      },
+      "data": {
+        "sectionTitle": "Data & Analytics",
+        "description": "Data analyst, engineer, scientist — analyze and decide with data."
+      },
+      "product": {
+        "sectionTitle": "Product",
+        "description": "Product manager, product owner — lead a product from idea to launch."
+      }
+    }
   }
 }

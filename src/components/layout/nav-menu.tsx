@@ -5,6 +5,7 @@ import { Menu } from "@base-ui/react/menu";
 import { ChevronDown, ChevronRight, Menu as HamburgerIcon } from "lucide-react";
 
 import { domains } from "@/lib/domains";
+import { domainCopy } from "@/lib/i18n/domain-copy";
 import { useLocale } from "@/lib/i18n/locale-context";
 import { cn } from "@/lib/utils";
 
@@ -53,7 +54,7 @@ function DomainSubmenuItems() {
             >
               <span className="flex items-center gap-2">
                 <Icon className="size-4" aria-hidden />
-                {domain.sectionTitle}
+                {domainCopy(t, domain).sectionTitle}
               </span>
               <ChevronRight className="size-3.5 text-muted-foreground" aria-hidden />
             </Menu.SubmenuTrigger>

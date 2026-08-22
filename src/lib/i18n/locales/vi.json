@@ -41,6 +41,10 @@
     },
     "field": {
       "comingSoon": "Sắp ra mắt"
+    },
+    "specialtyPicker": {
+      "title": "Bạn làm trong lĩnh vực nào?",
+      "subtitle": "Chọn đúng chuyên môn để câu hỏi luyện tập sát với công việc của bạn."
     }
   },
   "fields": {
@@ -54,6 +58,28 @@
     "filterSearchAria": "Tìm lĩnh vực",
     "filterStatusAll": "Tất cả",
     "filterStatusAvailable": "Đã mở",
-    "empty": "Không có lĩnh vực nào khớp với bộ lọc."
+    "empty": "Không có lĩnh vực nào khớp với bộ lọc.",
+    "domains": {
+      "tech": {
+        "sectionTitle": "Công nghệ",
+        "description": "Frontend, backend, DevOps — luyện phỏng vấn kỹ thuật thực tế."
+      },
+      "marketing": {
+        "sectionTitle": "Marketing",
+        "description": "SEO, quảng cáo, content — chiến lược marketing đa kênh."
+      },
+      "design": {
+        "sectionTitle": "Thiết kế",
+        "description": "UI/UX, graphic, motion — tư duy thiết kế trải nghiệm."
+      },
+      "data": {
+        "sectionTitle": "Data & Analytics",
+        "description": "Data analyst, engineer, scientist — phân tích và ra quyết định bằng số liệu."
+      },
+      "product": {
+        "sectionTitle": "Product",
+        "description": "Product manager, product owner — dẫn dắt sản phẩm từ ý tưởng đến ra mắt."
+      }
+    }
   }
 }

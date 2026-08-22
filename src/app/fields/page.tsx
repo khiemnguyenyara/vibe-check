@@ -12,6 +12,7 @@ import {
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { domains } from "@/lib/domains";
+import { domainCopy } from "@/lib/i18n/domain-copy";
 import { useLocale } from "@/lib/i18n/locale-context";
 import { STAGGER } from "@/lib/motion/tokens";
 
@@ -31,10 +32,11 @@ export default function FieldsPage() {
       if (status === "available" && domain.comingSoon) return false;
       if (status === "comingSoon" && !domain.comingSoon) return false;
       if (!needle) return true;
-      const haystack = `${domain.sectionTitle} ${domain.description}`.toLowerCase();
+      const copy = domainCopy(t, domain);
+      const haystack = `${copy.sectionTitle} ${copy.description}`.toLowerCase();
       return haystack.includes(needle);
     });
-  }, [query, status]);
+  }, [query, status, t]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">

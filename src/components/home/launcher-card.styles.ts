@@ -15,6 +15,7 @@ export const launcherCardVariants = cva(
 
 export const launcherCardStyles = {
   link: "block h-full",
+  trigger: "block h-full w-full text-left",
   title: "font-heading text-2xl font-extrabold text-foreground",
   body: "mt-2 text-base text-muted-foreground",
   badge: "inline-flex rounded-full bg-quest-locked px-2.5 py-1 text-xs font-bold text-quest-locked-foreground",

@@ -68,13 +68,13 @@ export const domains: readonly DomainConfig[] = [
     description: "Frontend, backend, DevOps — luyện phỏng vấn kỹ thuật thực tế.",
     icon: Code2,
     theme: {
-      text: "text-indigo-600",
-      badgeBg: "bg-indigo-600",
-      pillBg: "bg-indigo-50",
-      pillText: "text-indigo-600",
-      border: "border-indigo-200",
-      dot: "bg-indigo-500",
-      wash: "bg-indigo-50/70 dark:bg-indigo-950/20",
+      text: "text-green-600",
+      badgeBg: "bg-green-600",
+      pillBg: "bg-green-50",
+      pillText: "text-green-600",
+      border: "border-green-200",
+      dot: "bg-green-500",
+      wash: "bg-green-50/70 dark:bg-green-950/20",
     },
     specialties: [
       {

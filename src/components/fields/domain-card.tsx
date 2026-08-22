@@ -7,6 +7,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { fieldAccent } from "@/components/home/field-accent";
 import { GlassCard } from "@/components/ui/glass-card";
 import type { DomainConfig } from "@/lib/domains";
+import { domainCopy } from "@/lib/i18n/domain-copy";
 import { useLocale } from "@/lib/i18n/locale-context";
 import { riseVariants } from "@/lib/motion/tokens";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,7 @@ export function DomainCard({
 }) {
   const reduced = useReducedMotion() ?? false;
   const { t } = useLocale();
+  const copy = domainCopy(t, domain);
   const Icon = domain.icon;
 
   return (
@@ -44,10 +46,10 @@ export function DomainCard({
 
           <div>
             <h3 className="text-lg font-extrabold text-interview-accent-text">
-              {domain.sectionTitle}
+              {copy.sectionTitle}
             </h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              {domain.description}
+              {copy.description}
             </p>
           </div>
 
