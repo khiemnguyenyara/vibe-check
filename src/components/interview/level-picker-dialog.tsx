@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 
+import { fieldAccent } from "@/components/home/field-accent";
 import { ActionBubble } from "@/components/ui/action-bubble";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -16,20 +17,36 @@ import { INTERVIEW_LEVELS, type InterviewLevel } from "./level";
  */
 export function LevelPickerDialog({
   open,
+  domainId,
   specialtyLabel,
   onOpenChange,
   onConfirm,
 }: {
   readonly open: boolean;
+  /** Tints the dialog with this domain's accent — see fieldAccent's doc
+   *  comment for why DialogContent needs it applied directly. */
+  readonly domainId: string;
   readonly specialtyLabel: string;
   readonly onOpenChange: (open: boolean) => void;
   readonly onConfirm: (level: InterviewLevel) => void;
 }) {
   const [selected, setSelected] = useState<InterviewLevel | null>(null);
 
+  // Both call sites (FieldView, GetStartedDialog) reuse one long-lived
+  // instance across different specialties rather than remounting per pick —
+  // without this, confirming would silently reuse whatever level was left
+  // selected from the last specialty this dialog was opened for. A `key`
+  // remount would avoid the effect, but risks skipping the entrance
+  // animation on a freshly-remounted-already-open dialog.
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (open) setSelected(null);
+  }, [open]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" style={fieldAccent(domainId)}>
         <DialogTitle className="text-base font-extrabold text-foreground">
           Chọn độ khó buổi luyện tập
         </DialogTitle>

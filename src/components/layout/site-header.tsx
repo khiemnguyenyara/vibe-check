@@ -1,13 +1,27 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
+import { useState, type CSSProperties } from "react";
 import Link from "next/link";
 
 import { GetStartedDialog } from "@/components/layout/get-started-dialog";
 import { JobsMenu, MobileNavMenu } from "@/components/layout/nav-menu";
+import type { DomainConfig } from "@/lib/domains";
 import { useLocale } from "@/lib/i18n/locale-context";
 import type { Locale } from "@/lib/i18n/types";
+
+// Static — same mask on every render, so it's hoisted out instead of a
+// fresh object literal each time SiteHeader renders.
+const LOGO_MASK_STYLE: CSSProperties = {
+  aspectRatio: "1130 / 272",
+  maskImage: "url(/vibe-check-logo.png)",
+  maskRepeat: "no-repeat",
+  maskSize: "contain",
+  maskPosition: "left center",
+  WebkitMaskImage: "url(/vibe-check-logo.png)",
+  WebkitMaskRepeat: "no-repeat",
+  WebkitMaskSize: "contain",
+  WebkitMaskPosition: "left center",
+} as CSSProperties;
 
 /** Two-letter toggle rather than a dropdown — there are only ever two locales. */
 function LocaleToggle() {
@@ -31,8 +45,19 @@ function LocaleToggle() {
  * dropdown / About) collapsed into one menu on mobile, the locale toggle,
  * and Get Started opening the quick-intake popup. One shared component, so
  * every page that renders it stays in sync automatically.
+ *
+ * `domainConfig` scopes Get Started to one field — passed by `FieldView`
+ * (specs/003 §7c) so a visitor already on e.g. `/fields/tech` picks a
+ * specialty within that field instead of re-picking the field from
+ * scratch, and the popup picks up that field's accent color. Static from
+ * `@/lib/domains` for now; the intent is this becomes backend-driven
+ * per specialty later without changing this prop's shape.
  */
-export function SiteHeader() {
+export function SiteHeader({
+  domainConfig,
+}: {
+  readonly domainConfig?: DomainConfig;
+} = {}) {
   const { t } = useLocale();
   const [getStartedOpen, setGetStartedOpen] = useState(false);
 
@@ -43,13 +68,15 @@ export function SiteHeader() {
           href="/"
           className="flex shrink-0 items-center rounded-full py-1 pr-2 opacity-100 transition-opacity hover:opacity-80"
         >
-          <Image
-            src="/vibe-check-logo.png"
-            alt={t.header.brand}
-            width={1130}
-            height={272}
-            className="h-7 w-auto shrink-0 object-contain sm:h-8"
-            priority
+          {/* Masked rather than an <img> — vibe-check-logo.png ships its own
+              purple gradient, but going through a mask + background-color
+              instead discards that in favor of --interview-accent, so the
+              mark still recolors with the field like everything else here. */}
+          <span
+            role="img"
+            aria-label={t.header.brand}
+            className="inline-block h-7 w-auto shrink-0 bg-interview-accent transition-colors sm:h-8"
+            style={LOGO_MASK_STYLE}
           />
         </Link>
 
@@ -87,7 +114,11 @@ export function SiteHeader() {
         </div>
       </div>
 
-      <GetStartedDialog open={getStartedOpen} onOpenChange={setGetStartedOpen} />
+      <GetStartedDialog
+        open={getStartedOpen}
+        onOpenChange={setGetStartedOpen}
+        domainConfig={domainConfig}
+      />
     </header>
   );
 }

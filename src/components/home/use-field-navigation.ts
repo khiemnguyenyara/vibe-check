@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import type { InterviewLevel } from "@/components/interview/level";
+import { interviewPath, type InterviewLevel } from "@/components/interview/level";
 import { domains } from "@/lib/domains";
 
 import { resolveNode } from "./resolve-node";
@@ -50,9 +50,7 @@ export function useFieldNavigation() {
 
   function handleConfirmLevel(level: InterviewLevel) {
     if (!pendingNode) return;
-    router.push(
-      `/interview/${pendingNode.domain.id}/${pendingNode.specialty.id}?level=${level}`
-    );
+    router.push(interviewPath(pendingNode.domain.id, pendingNode.specialty.id, level));
     setPendingNode(null);
   }
 

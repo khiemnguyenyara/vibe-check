@@ -11,6 +11,12 @@
  * `mentor` is optional — only `tech` has an illustrated character today.
  * Add an entry here (image + name) when another domain gets one; `FieldView`
  * renders the mentor block only when it's present.
+ *
+ * `footerMark` is the small brand mark `SiteFooter` renders — every domain
+ * points at the same constant asset for now (no per-field art yet). It's
+ * optional on each entry below (only `fieldHeroFor`'s return type guarantees
+ * one) precisely so a future domain can set its own without every other
+ * entry needing to repeat the shared constant.
  */
 export interface FieldHeroConfig {
   readonly backdrop: string;
@@ -21,9 +27,16 @@ export interface FieldHeroConfig {
     readonly image: string;
     readonly name: string;
   };
+  readonly footerMark: string;
 }
 
-const DEFAULT_HERO: FieldHeroConfig = {
+type FieldHeroEntry = Omit<FieldHeroConfig, "footerMark"> & {
+  readonly footerMark?: string;
+};
+
+const FOOTER_MARK = "/assets/dok.png";
+
+const DEFAULT_HERO: FieldHeroEntry = {
   backdrop:
     "pointer-events-none absolute inset-0 -z-10 overflow-hidden bg-gradient-to-br from-violet-300 via-fuchsia-100 to-transparent dark:from-violet-900/60 dark:via-fuchsia-950/30",
   orbLeft: "absolute -left-40 -top-20 size-[28rem] rounded-full bg-interview-accent/40 blur-3xl",
@@ -32,7 +45,7 @@ const DEFAULT_HERO: FieldHeroConfig = {
     "absolute left-1/2 top-40 size-[24rem] -translate-x-1/2 rounded-full bg-violet-400/25 blur-3xl",
 };
 
-const FIELD_HERO_CONFIG: Record<string, FieldHeroConfig> = {
+const FIELD_HERO_CONFIG: Record<string, FieldHeroEntry> = {
   tech: {
     backdrop:
       "pointer-events-none absolute inset-0 -z-10 overflow-hidden bg-gradient-to-br from-green-300 via-emerald-100 to-transparent dark:from-green-900/60 dark:via-emerald-950/30",
@@ -76,6 +89,7 @@ const FIELD_HERO_CONFIG: Record<string, FieldHeroConfig> = {
   },
 };
 
-export function fieldHeroFor(domainId: string): FieldHeroConfig {
-  return FIELD_HERO_CONFIG[domainId] ?? DEFAULT_HERO;
+export function fieldHeroFor(domainId?: string): FieldHeroConfig {
+  const base = (domainId && FIELD_HERO_CONFIG[domainId]) || DEFAULT_HERO;
+  return { ...base, footerMark: base.footerMark ?? FOOTER_MARK };
 }

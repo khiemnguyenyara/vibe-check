@@ -106,7 +106,10 @@ export function CareerCard({
     >
       <GlassCard
         variant={isLocked ? "quiet" : "interactive"}
-        className={cn("flex h-full flex-col gap-3", isLocked && "opacity-70")}
+        className={cn(
+          "flex h-full flex-col gap-3 hover:shadow-sm",
+          isLocked && "opacity-70"
+        )}
       >
         <div className="flex items-start justify-between gap-2">
           <span

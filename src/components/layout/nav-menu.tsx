@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Menu } from "@base-ui/react/menu";
 import { ChevronDown, ChevronRight, Menu as HamburgerIcon } from "lucide-react";
 
+import { fieldAccent } from "@/components/home/field-accent";
 import { domains } from "@/lib/domains";
 import { domainCopy } from "@/lib/i18n/domain-copy";
 import { useLocale } from "@/lib/i18n/locale-context";
@@ -46,11 +47,16 @@ function DomainSubmenuItems() {
     <>
       {domains.map((domain) => {
         const Icon = domain.icon;
+        // The trigger row and its flyout are portal-scoped separately (see
+        // fieldAccent's doc comment), but they're the same domain, so one
+        // call covers both.
+        const accent = fieldAccent(domain.id);
         return (
           <Menu.SubmenuRoot key={domain.id}>
             <Menu.SubmenuTrigger
               openOnHover
               className={cn(itemClass, "justify-between")}
+              style={accent}
             >
               <span className="flex items-center gap-2">
                 <Icon className="size-4" aria-hidden />
@@ -63,6 +69,7 @@ function DomainSubmenuItems() {
                 className={positionerClass}
                 sideOffset={4}
                 align="start"
+                style={accent}
               >
                 <Menu.Popup className={cn(popupClass, "min-w-48")}>
                   {domain.specialties.map((specialty) => (

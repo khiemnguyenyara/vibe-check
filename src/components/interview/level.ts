@@ -66,3 +66,12 @@ export function parseInterviewLevel(value: string | null): InterviewLevel | null
     ? value
     : null;
 }
+
+/** The one route every level-confirm flow navigates to. */
+export function interviewPath(
+  domainId: string,
+  specialtyId: string,
+  level: InterviewLevel
+): string {
+  return `/interview/${domainId}/${specialtyId}?level=${level}`;
+}

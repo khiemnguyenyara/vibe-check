@@ -12,7 +12,9 @@ export type IntakeReason = "interview" | "other";
 
 export interface IntakeProfile {
   readonly role: string;
-  readonly reason: IntakeReason;
+  /** Omitted when the popup opens from a field page — the visitor already
+   *  committed to that field, so "why are you visiting?" is redundant. */
+  readonly reason?: IntakeReason;
 }
 
 const INTAKE_KEY = "vibe-check:intake-profile";
@@ -21,7 +23,8 @@ function isIntakeProfile(value: unknown): value is IntakeProfile {
   if (typeof value !== "object" || value === null) return false;
   const { role, reason } = value as Record<string, unknown>;
   return (
-    typeof role === "string" && (reason === "interview" || reason === "other")
+    typeof role === "string" &&
+    (reason === undefined || reason === "interview" || reason === "other")
   );
 }
 

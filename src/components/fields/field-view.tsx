@@ -59,7 +59,7 @@ export function FieldView({
           <div className={hero.orbCenter} />
         </div>
 
-        <SiteHeader />
+        <SiteHeader domainConfig={domainConfig} />
 
         <main className={styles.main}>
           <motion.div
@@ -94,10 +94,11 @@ export function FieldView({
         {lockNotice}
       </p>
 
-      <SiteFooter />
+      <SiteFooter domainId={domainConfig.id} />
 
       <LevelPickerDialog
         open={pendingNode !== null}
+        domainId={domainConfig.id}
         specialtyLabel={pendingNode?.specialty.title ?? ""}
         onOpenChange={(open) => {
           if (!open) closeLevelPicker();

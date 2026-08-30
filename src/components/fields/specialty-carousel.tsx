@@ -1,7 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
-import { motion, useAnimationControls, useReducedMotion } from "framer-motion";
+import { useRef } from "react";
+import {
+  motion,
+  useAnimationFrame,
+  useMotionValue,
+  useReducedMotion,
+  useTransform,
+} from "framer-motion";
 
 import type { ResolvedNode } from "@/components/home/types";
 
@@ -13,9 +19,14 @@ const SECONDS_PER_ITEM = 5;
 /**
  * Continuous right-to-left marquee over one domain's specialties — every
  * `CareerCard` visible at once, scrolling rather than paging. The node list
- * is rendered twice back to back and the track animates from 0% to -50% on
- * a perfect loop, so the seam never shows regardless of how wide the cards
- * render (no pixel measurement needed).
+ * is rendered twice back to back and the track loops from 0% to -50%, so the
+ * seam never shows regardless of how wide the cards render (no pixel
+ * measurement needed).
+ *
+ * Driven by a manual `useAnimationFrame` tick rather than a declarative
+ * keyframe animation so that pausing (hover/focus) and resuming just
+ * toggles a flag — the track keeps going from wherever it stopped instead
+ * of snapping back to the keyframe's start on every resume.
  *
  * Autoplay pauses on hover/focus (WCAG 2.2.2 — a moving target a
  * keyboard/mouse user is actively engaging with must stop moving) and never
@@ -29,37 +40,34 @@ export function SpecialtyCarousel({
   readonly onActivate: (node: ResolvedNode) => void;
 }) {
   const reduced = useReducedMotion() ?? false;
-  const controls = useAnimationControls();
+  const pausedRef = useRef(false);
+  const percent = useMotionValue(0);
+  const x = useTransform(percent, (v) => `${v}%`);
   const duration = nodes.length * SECONDS_PER_ITEM;
 
-  function play() {
-    if (reduced) return;
-    controls.start({
-      x: ["0%", "-50%"],
-      transition: { duration, ease: "linear", repeat: Infinity },
-    });
-  }
-
-  useEffect(() => {
-    play();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reduced, duration]);
+  useAnimationFrame((_, delta) => {
+    if (reduced || pausedRef.current) return;
+    const next = percent.get() - (delta / 1000 / duration) * 50;
+    percent.set(next <= -50 ? next + 50 : next);
+  });
 
   const loopedNodes = [...nodes, ...nodes];
+  const pause = () => {
+    pausedRef.current = true;
+  };
+  const resume = () => {
+    pausedRef.current = false;
+  };
 
   return (
     <div
       className={styles.viewport}
-      onMouseEnter={() => controls.stop()}
-      onMouseLeave={play}
-      onFocus={() => controls.stop()}
-      onBlur={play}
+      onMouseEnter={pause}
+      onMouseLeave={resume}
+      onFocus={pause}
+      onBlur={resume}
     >
-      <motion.div
-        className={styles.track}
-        animate={controls}
-        initial={{ x: "0%" }}
-      >
+      <motion.div className={styles.track} style={{ x }}>
         {loopedNodes.map((node, i) => (
           <div key={`${node.specialty.id}-${i}`} className={styles.slide}>
             <CareerCard
