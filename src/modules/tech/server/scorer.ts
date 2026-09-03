@@ -46,8 +46,14 @@ const COVERAGE_THRESHOLD = 0.4;
  * Diacritic-stripping matters because the question bank is fully accented
  * Vietnamese while candidates routinely type unaccented — "khong" must match
  * "không" or every answer would score near zero.
+ *
+ * Exported so `content/invariants.ts` can assert that every authored key
+ * point yields at least one significant token. That check has to run the
+ * *real* tokenizer rather than a copy of its rules: the interesting failures
+ * come from `MIN_TOKEN_LENGTH` and `STOP_WORDS` above, and a reimplementation
+ * would stop agreeing with them the first time either is tuned.
  */
-function tokenize(text: string): string[] {
+export function tokenize(text: string): string[] {
   return text
     .toLowerCase()
     .normalize("NFD")

@@ -60,6 +60,21 @@ export interface InterviewSessionState {
   submitAnswer: (answer: string) => Promise<void>;
   /** Re-send the last failed turn. Byte-identical to the original request. */
   retry: () => Promise<void>;
+  /**
+   * Abandon the current session and start a new one, in place.
+   *
+   * `retry()` only helps when resubmitting the identical request could
+   * succeed — a transient network blip, an upstream timeout. Some failures
+   * can't be resolved that way: a session persisted before a content deploy
+   * carries a question id the server no longer mints (ids are versioned, not
+   * migrated — see the id codec in the tech module's question service), so
+   * every retry reproduces the exact same rejection forever, and nothing
+   * else in this engine ever clears that session on an error path — only
+   * `completeSession` does. Without an explicit way out, a candidate who
+   * hits this is stuck: `retry` loops, and leaving and coming back
+   * re-resumes the same broken session. This is that way out.
+   */
+  restart: () => Promise<void>;
 }
 
 /** The three gaps a candidate missed most often, for the summary screen. */
@@ -115,6 +130,30 @@ export function useInterviewSession({
     setSession(next);
     saveActiveSession(next);
   }, []);
+
+  /**
+   * A brand-new, empty session for this module/specialty/context.
+   *
+   * Memoized so the bootstrap effect's dependency array can name it honestly
+   * instead of either omitting a real dependency or re-running on every
+   * render. Factored out so the two call sites (bootstrap, `restart`) can't
+   * drift on what "starting fresh" means.
+   */
+  const freshSession = useCallback(
+    (): PersistedSession => ({
+      sessionId: crypto.randomUUID(),
+      moduleId,
+      specialtyId,
+      startedAt: new Date().toISOString(),
+      completedAt: null,
+      turns: [],
+      pendingAnswer: null,
+      sessionLength: 0,
+      experienceLevel: context.experienceLevel,
+      locale: context.locale,
+    }),
+    [moduleId, specialtyId, context.experienceLevel, context.locale]
+  );
 
   const completeSession = useCallback((finished: PersistedSession) => {
     const completedAt = new Date().toISOString();
@@ -255,18 +294,12 @@ export function useInterviewSession({
       return;
     }
 
-    void submitTurn({
-      sessionId: crypto.randomUUID(),
-      moduleId,
-      specialtyId,
-      startedAt: new Date().toISOString(),
-      completedAt: null,
-      turns: [],
-      pendingAnswer: null,
-      sessionLength: 0,
-      experienceLevel: context.experienceLevel,
-    });
-  }, [moduleId, specialtyId, service, submitTurn, context.experienceLevel]);
+    void submitTurn(freshSession());
+    // context.experienceLevel/context.locale aren't read directly here —
+    // they only reach this effect through freshSession, which already
+    // depends on them, so naming them again would be a second copy of the
+    // same dependency instead of a real one.
+  }, [moduleId, specialtyId, service, submitTurn, freshSession]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   /* ---------------------------------------------------------------- */
@@ -291,6 +324,17 @@ export function useInterviewSession({
     await submitTurn(session);
   }, [session, pending, submitTurn]);
 
+  const restart = useCallback(async (): Promise<void> => {
+    if (pending) return;
+    // Drop the stuck session before starting the new one, not after — if a
+    // fresh submitTurn is still in flight when this fires, we'd otherwise
+    // race clearActiveSession against commit()'s save of the new session.
+    clearActiveSession();
+    setSummary(null);
+    setStatus("in_progress");
+    await submitTurn(freshSession());
+  }, [pending, submitTurn, freshSession]);
+
   return {
     turns: session?.turns ?? [],
     status,
@@ -303,5 +347,6 @@ export function useInterviewSession({
     startedAt: session?.startedAt ?? null,
     submitAnswer,
     retry,
+    restart,
   };
 }

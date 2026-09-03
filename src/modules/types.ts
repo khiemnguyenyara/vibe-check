@@ -22,8 +22,19 @@ export type ExperienceLevel = "junior" | "mid" | "senior" | "staff";
  * rule 4 gives for ExperienceLevel: a free-form locale lets a caller request
  * content that does not exist, and the failure surfaces as wrong-language
  * output rather than a type error.
+ *
+ * Widened to `en-US` when the tech question bank gained English content. The
+ * rule specs/002 §10 Q2 states still holds and is what gates the next entry:
+ * a locale belongs here only once a bank can actually answer in it, because
+ * accepting one with no content is a 200 response in the wrong language,
+ * which is worse than a rejection.
+ *
+ * These are BCP-47 wire tags, distinct from the UI's `"vi" | "en"` in
+ * src/lib/i18n/types.ts. The interview route maps between them; keeping them
+ * separate means a UI language toggle cannot silently request interview
+ * content that does not exist.
  */
-export type Locale = "vi-VN";
+export type Locale = "vi-VN" | "en-US";
 
 export interface InterviewSessionContext {
   readonly sessionId: string;

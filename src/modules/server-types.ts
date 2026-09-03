@@ -2,7 +2,7 @@ import "server-only";
 
 import type { AnswerEvaluation, InterviewQuestion } from "@/lib/session/types";
 
-import type { InterviewSessionContext } from "./types";
+import type { InterviewSessionContext, Locale } from "./types";
 
 /**
  * The server-side half of a domain module: the content and grading criteria
@@ -29,10 +29,28 @@ export interface ServerInterviewModule {
    * The question for `turnIndex`. Returns null when the index is out of
    * range — the handler treats that as a completed session rather than an
    * error, since the client legitimately reaches the end.
+   *
+   * `specialtyId` is the specialty the candidate picked (a `Specialty.id`
+   * from src/lib/domains.ts), forwarded verbatim from the request. It is
+   * optional per the additive rule in docs/interface-contracts.md §5, so a
+   * module that serves one bank for its whole domain simply ignores the
+   * parameter and keeps compiling.
+   *
+   * It is a separate parameter rather than a field on `InterviewSessionContext`
+   * because that context is the prompt-builder's input and crosses the wire
+   * under `interviewSessionContextSchema`; adding a field there would ripple
+   * through the drift guards in src/modules/types.ts and change the request
+   * shape for a value the request already carries at the top level.
+   *
+   * Treat it as untrusted (specs/002 §5.1): it is a validated kebab-case
+   * string, not a promise that any such specialty exists. An unrecognized
+   * value must degrade — this module's repository falls back to a general
+   * bank — never throw.
    */
   selectQuestion(
     context: InterviewSessionContext,
-    turnIndex: number
+    turnIndex: number,
+    specialtyId?: string
   ): Promise<InterviewQuestion | null>;
 
   /**
@@ -42,8 +60,17 @@ export interface ServerInterviewModule {
    * question content back in the transcript, and the server must never grade
    * against it. Without this, a candidate could post a question carrying one
    * trivially-matched key point and score themselves full marks.
+   *
+   * `locale` is optional per docs/interface-contracts.md §5, but callers that
+   * have one should pass it: a module with localized content grades an open
+   * answer by key-point coverage, and re-resolving in the wrong language
+   * compares the candidate's words against a translation of the rubric they
+   * never saw. Omitting it falls back to the module's authoring default.
    */
-  resolveQuestion(questionId: string): Promise<InterviewQuestion | null>;
+  resolveQuestion(
+    questionId: string,
+    locale?: Locale
+  ): Promise<InterviewQuestion | null>;
 
   /** Grade an answer. Must be deterministic (interface-contracts.md §6). */
   evaluate(

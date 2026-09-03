@@ -8,9 +8,13 @@
  * hue in `@/lib/domains`, just carried into a gradient-wash-plus-glow-orbs
  * hero instead of a flat tint.
  *
- * `mentor` is optional — only `tech` has an illustrated character today.
- * Add an entry here (image + name) when another domain gets one; `FieldView`
- * renders the mentor block only when it's present.
+ * `mentor` is NOT declared per entry below — it is resolved from
+ * `fieldCharacter()` in `@/lib/avatar`, which is the single registry of who
+ * represents a field. The interview Chat pane reads the same registry for the
+ * avatar beside each interviewer message, and two lists would drift the first
+ * time a character was added to one and not the other. Add a character there;
+ * this hero and that avatar both pick it up. `FieldView` renders the mentor
+ * block only when one exists (only `tech` has one today).
  *
  * `footerMark` is the small brand mark `SiteFooter` renders — every domain
  * points at the same constant asset for now (no per-field art yet). It's
@@ -18,6 +22,8 @@
  * one) precisely so a future domain can set its own without every other
  * entry needing to repeat the shared constant.
  */
+import { fieldCharacter } from "@/lib/avatar";
+
 export interface FieldHeroConfig {
   readonly backdrop: string;
   readonly orbLeft: string;
@@ -30,7 +36,7 @@ export interface FieldHeroConfig {
   readonly footerMark: string;
 }
 
-type FieldHeroEntry = Omit<FieldHeroConfig, "footerMark"> & {
+type FieldHeroEntry = Omit<FieldHeroConfig, "footerMark" | "mentor"> & {
   readonly footerMark?: string;
 };
 
@@ -53,7 +59,6 @@ const FIELD_HERO_CONFIG: Record<string, FieldHeroEntry> = {
     orbRight: "absolute -right-40 top-16 size-[28rem] rounded-full bg-emerald-500/35 blur-3xl",
     orbCenter:
       "absolute left-1/2 top-40 size-[24rem] -translate-x-1/2 rounded-full bg-green-400/25 blur-3xl",
-    mentor: { image: "/assets/dok.png", name: "Dok" },
   },
   marketing: {
     backdrop:
@@ -91,5 +96,9 @@ const FIELD_HERO_CONFIG: Record<string, FieldHeroEntry> = {
 
 export function fieldHeroFor(domainId?: string): FieldHeroConfig {
   const base = (domainId && FIELD_HERO_CONFIG[domainId]) || DEFAULT_HERO;
-  return { ...base, footerMark: base.footerMark ?? FOOTER_MARK };
+  return {
+    ...base,
+    mentor: fieldCharacter(domainId) ?? undefined,
+    footerMark: base.footerMark ?? FOOTER_MARK,
+  };
 }

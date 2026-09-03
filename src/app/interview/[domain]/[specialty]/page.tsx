@@ -13,6 +13,8 @@ import {
   toInterviewLevel,
   type InterviewLevel,
 } from "@/components/interview/level";
+import { toWireLocale, type WireLocale } from "@/components/interview/locale";
+import { readStoredLocale } from "@/lib/i18n/storage";
 import { SessionSummary } from "@/components/interview/session-summary";
 import { useInterviewSession } from "@/components/interview/use-interview-session";
 import { WorkspacePane } from "@/components/interview/workspace-pane";
@@ -102,9 +104,26 @@ function InterviewSession({
   readonly onExit: () => void;
 }) {
   const searchParams = useSearchParams();
-  const [level, setLevel] = useState<InterviewLevel | null>(() =>
-    parseInterviewLevel(searchParams.get("level"))
-  );
+
+  /**
+   * The two values `ActiveInterview` needs before it can mount, held as one
+   * slot rather than two `useState` calls.
+   *
+   * They're not symmetric — `level` may resolve synchronously from the URL
+   * on the very first render, while `locale` is *always* resolved later, in
+   * an effect (see the comment below) — so this can't be a single
+   * `T | null`; it has to be an object with two independently-nullable
+   * fields. What one slot still buys over two: the resumable branch below
+   * sets both fields in a single update instead of two sequential
+   * `setState` calls, and a future third bootstrap value is one field added
+   * to `Bootstrap` and one `useState` to remember, not a second one to
+   * introduce from scratch.
+   */
+  const [bootstrap, setBootstrap] = useState<Bootstrap>(() => ({
+    level: parseInterviewLevel(searchParams.get("level")),
+    locale: null,
+  }));
+
   // Bumped on restart to force a fresh `ActiveInterview` mount (and with it
   // a fresh `useInterviewSession` bootstrap) at the *same* level — there is
   // no picker on this route anymore to ask again, so "Luyện lại" just
@@ -117,6 +136,13 @@ function InterviewSession({
   // drawing later questions from a different bank mid-session. Read-in-effect,
   // same hydration-safe idiom use-interview-session.ts's own bootstrap effect
   // uses — the server has no sessionStorage, so this can't run during render.
+  //
+  // `locale` is resolved here unconditionally, not just on the resumable
+  // path: the honest value is never available during render either way —
+  // `LocaleProvider` renders its default on the server and first paint, then
+  // restores the stored preference in an effect, and child effects run
+  // before parent ones, so reading `useLocale()` here would hand the session
+  // bootstrap "vi" a beat before the provider swapped to "en".
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!moduleDef.interviewService) return;
@@ -127,17 +153,32 @@ function InterviewSession({
       stored.specialtyId === specialtyId &&
       stored.completedAt === null &&
       stored.turns.length > 0;
-    if (isResumable) setLevel(toInterviewLevel(stored.experienceLevel));
+    if (isResumable) {
+      setBootstrap({
+        level: toInterviewLevel(stored.experienceLevel),
+        // A resumed session keeps the language it started in, overriding the
+        // current UI preference. Its earlier turns are already persisted in
+        // that language, and the server re-resolves their rubric per request —
+        // switching now would grade those answers against a translation.
+        locale: stored.locale,
+      });
+      return;
+    }
+    setBootstrap((prev) => ({
+      ...prev,
+      locale: toWireLocale(readStoredLocale() ?? "vi"),
+    }));
   }, [moduleId, specialtyId, moduleDef.interviewService]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   // No level from the URL and nothing to resume — this route was reached
   // without ever going through the coach-card popup, so send it back rather
-  // than rendering a picker here.
+  // than rendering a picker here. Only `level` is checked: `locale` above
+  // always resolves to something, it never has a "give up" case of its own.
   useEffect(() => {
-    if (level !== null) return;
+    if (bootstrap.level !== null) return;
     onExit();
-  }, [level, onExit]);
+  }, [bootstrap.level, onExit]);
 
   // hla.md §4.1 step 3: an unusable module renders an unavailable state
   // rather than throwing at the UI layer. Checked before the level guard so
@@ -146,7 +187,7 @@ function InterviewSession({
     return <UnavailableDomain domainLabel={domainLabel} onExit={onExit} />;
   }
 
-  if (level === null) {
+  if (bootstrap.level === null || bootstrap.locale === null) {
     return (
       <div className="grid h-full place-items-center px-6 text-center text-sm text-muted-foreground">
         Đang chuyển hướng…
@@ -161,11 +202,17 @@ function InterviewSession({
       moduleId={moduleId}
       specialtyId={specialtyId}
       moduleDef={moduleDef}
-      level={level}
+      level={bootstrap.level}
+      locale={bootstrap.locale}
       onExit={onExit}
       onRestart={() => setSessionEpoch((epoch) => epoch + 1)}
     />
   );
+}
+
+interface Bootstrap {
+  readonly level: InterviewLevel | null;
+  readonly locale: WireLocale | null;
 }
 
 function ActiveInterview({
@@ -174,6 +221,7 @@ function ActiveInterview({
   specialtyId,
   moduleDef,
   level,
+  locale,
   onExit,
   onRestart,
 }: {
@@ -182,6 +230,7 @@ function ActiveInterview({
   readonly specialtyId: string;
   readonly moduleDef: NonNullable<ReturnType<typeof getModule>>;
   readonly level: InterviewLevel;
+  readonly locale: WireLocale;
   readonly onExit: () => void;
   readonly onRestart: () => void;
 }) {
@@ -196,9 +245,9 @@ function ActiveInterview({
       sessionId: `${moduleId}:${specialtyId}`,
       experienceLevel: toExperienceLevel(level),
       focusAreas: [specialtyLabel],
-      locale: "vi-VN",
+      locale,
     }),
-    [moduleId, specialtyId, specialtyLabel, level]
+    [moduleId, specialtyId, specialtyLabel, level, locale]
   );
 
   const {
@@ -213,6 +262,7 @@ function ActiveInterview({
     startedAt,
     submitAnswer,
     retry,
+    restart,
   } = useInterviewSession({
     context,
     moduleId,
@@ -241,6 +291,7 @@ function ActiveInterview({
   const chatPane = (
     <ChatPane
       title={`${specialtyLabel} Interview`}
+      domainId={moduleId}
       avatarSeed={`${moduleId}-${specialtyId}`}
       turns={turns}
       isFetchingNext={isFetchingNext}
@@ -251,6 +302,7 @@ function ActiveInterview({
       pendingAnswer={pendingAnswer}
       onSubmitAnswer={(answer) => void submitAnswer(answer)}
       onRetry={() => void retry()}
+      onAbandon={() => void restart()}
     />
   );
 

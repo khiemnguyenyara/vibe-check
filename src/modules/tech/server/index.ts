@@ -1,11 +1,26 @@
 import "server-only";
 
-import type { InterviewQuestion } from "@/lib/session/types";
-
 import type { ServerInterviewModule } from "../../server-types";
-import type { ExperienceLevel } from "../../types";
-import { QUESTION_BANK, TECH_SESSION_LENGTH, type QuestionBankEntry } from "./question-bank";
+import { TECH_SESSION_LENGTH } from "./content";
+import {
+  resolveEntry,
+  resolveQuestion,
+  selectQuestion,
+} from "./question-service";
 import { scoreAnswer, scoreMultipleChoice } from "./scorer";
+
+/**
+ * The Tech module's server half — the adapter between `ServerInterviewModule`
+ * (what the route handler consumes) and the question service (what actually
+ * knows the content).
+ *
+ * Deliberately thin. Everything that used to live here — id formatting, bank
+ * indexing, the projection that strips answer keys — moved into
+ * ./question-service.ts, leaving this file as pure contract satisfaction. The
+ * split matters because the route handler is the one caller that must not
+ * know how content is organized: give it a module with a bank inlined and the
+ * next specialty's content shape becomes a route change.
+ */
 
 /**
  * Mock-only pacing. The scorer and bank lookup are instant, so without this
@@ -19,97 +34,63 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/**
- * Question ids are `${level}-${index}` so they stay stable across requests
- * and deploys. Stability matters twice: a restored session must match a
- * persisted turn back to its question, and §5.2 re-resolution needs an id
- * that means the same thing on every instance.
- */
-function questionId(level: ExperienceLevel, index: number): string {
-  return `${level}-${index}`;
-}
-
-function toQuestion(
-  entry: QuestionBankEntry,
-  level: ExperienceLevel,
-  index: number
-): InterviewQuestion {
-  const id = questionId(level, index);
-  if (entry.type === "multiple_choice") {
-    return {
-      id,
-      type: "multiple_choice",
-      prompt: entry.question,
-      options: entry.options,
-      maxScore: entry.maxScore,
-    };
-  }
-  return {
-    id,
-    type: "open",
-    prompt: entry.question,
-    expectedKeyPoints: entry.expectedKeyPoints,
-    maxScore: entry.rubric.maxScore,
-    requiresPractice: entry.requiresPractice,
-  };
-}
-
-function parseQuestionId(
-  id: string
-): { level: ExperienceLevel; index: number } | null {
-  const separator = id.lastIndexOf("-");
-  if (separator <= 0) return null;
-
-  const level = id.slice(0, separator);
-  const index = Number(id.slice(separator + 1));
-
-  if (!Object.hasOwn(QUESTION_BANK, level)) return null;
-  if (!Number.isInteger(index) || index < 0) return null;
-
-  const bank = QUESTION_BANK[level as ExperienceLevel];
-  if (index >= bank.length) return null;
-
-  return { level: level as ExperienceLevel, index };
-}
-
 export const techServerModule: ServerInterviewModule = {
   id: "tech",
   sessionLength: TECH_SESSION_LENGTH,
 
-  async selectQuestion(context, turnIndex) {
-    if (turnIndex < 0 || turnIndex >= TECH_SESSION_LENGTH) return null;
+  async selectQuestion(context, turnIndex, specialtyId) {
+    const resolved = selectQuestion(
+      specialtyId,
+      context.experienceLevel,
+      turnIndex,
+      context.locale
+    );
+    if (!resolved) return null;
 
+    // After the null check, so an out-of-range turn ends the session
+    // immediately instead of stalling for a latency that models nothing.
     await delay(MOCK_LATENCY_MS);
 
-    const level = context.experienceLevel;
-    const bank = QUESTION_BANK[level];
-    // The bank is shorter than a session, so questions cycle. A real
-    // implementation would draw without replacement across a larger pool.
-    const index = turnIndex % bank.length;
-    return toQuestion(bank[index], level, index);
+    return resolved.question;
   },
 
-  async resolveQuestion(id) {
-    const parsed = parseQuestionId(id);
-    if (!parsed) return null;
-    return toQuestion(
-      QUESTION_BANK[parsed.level][parsed.index],
-      parsed.level,
-      parsed.index
-    );
+  async resolveQuestion(id, locale) {
+    return resolveQuestion(id, locale)?.question ?? null;
   },
 
   async evaluate(question, answer) {
     if (question.type === "multiple_choice") {
-      const parsed = parseQuestionId(question.id);
-      const entry = parsed && QUESTION_BANK[parsed.level][parsed.index];
+      // `question` is trusted here, not re-derived from the client: the
+      // route only ever calls `evaluate` with the value it got back from
+      // this same module's `selectQuestion`/`resolveQuestion` moments
+      // earlier (see `resolveGradableQuestion` in the route), which already
+      // re-resolved it from the server's own content by id (specs/002 §5.2).
+      // What's missing from that value — deliberately, by projection — is
+      // `correctOptionIndex`, so only the entry needs a second lookup, not
+      // the whole question.
+      //
+      // That second lookup still means `decodeQuestionId` runs twice per
+      // graded MC turn — once inside the route's earlier `resolveQuestion`
+      // call, once here. Considered and left as is: the two calls are
+      // separate `ServerInterviewModule` methods the route invokes
+      // independently, with no request-scoped place to cache a decode
+      // between them — `techServerModule` is a module-level singleton
+      // shared across concurrent requests, so caching on it would be shared
+      // mutable state, not a speedup. The only way to actually skip the
+      // second decode is threading a resolved-entry handle through
+      // `evaluate`'s signature, which would put a tech-specific concept on
+      // the interface every future module has to carry. That's the wrong
+      // trade for a saved string split.
+      const entry = resolveEntry(question.id);
       if (!entry || entry.type !== "multiple_choice") {
         throw new Error(
           `Cannot resolve multiple-choice bank entry for "${question.id}"`
         );
       }
+
       return scoreMultipleChoice(question, answer, entry.correctOptionIndex);
     }
+
     return scoreAnswer(question, answer);
   },
 };

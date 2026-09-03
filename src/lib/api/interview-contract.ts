@@ -68,8 +68,11 @@ export const experienceLevelSchema = z.enum([
  * locale with no content is a 200 response in the wrong language, which is
  * worse than a rejection. Widening is one line here plus one in
  * src/modules/types.ts, and the drift guard forces both to move together.
+ *
+ * `en-US` was added alongside English content in the tech bank, not ahead of
+ * it — that ordering is the whole rule.
  */
-export const localeSchema = z.enum(["vi-VN"]);
+export const localeSchema = z.enum(["vi-VN", "en-US"]);
 
 /** kebab-case, matching the ModuleDefinition.id constraint. */
 export const moduleIdSchema = z

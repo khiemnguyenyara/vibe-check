@@ -2,13 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Check, Mic, RotateCcw, Send } from "lucide-react";
+import { Check, Mic, RefreshCw, RotateCcw, Send } from "lucide-react";
 
 import { ActionBubble } from "@/components/ui/action-bubble";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { avatarUrl } from "@/lib/avatar";
+import { personaAvatar } from "@/lib/avatar";
 import { cn } from "@/lib/utils";
 import type { TranscriptTurn } from "@/lib/session/types";
 
@@ -24,8 +24,14 @@ import { EvaluationCard } from "./evaluation-card";
 
 interface ChatPaneProps {
   readonly title: string;
-  /** Seeds the interviewer persona avatar — same seed CoachCard uses, so
-   * it's the same character the candidate picked on the home page. */
+  /** See `useInterviewSession`'s `restart` — offered on every error, next to
+   * retry, because not every failure is one a retry can fix. */
+  readonly onAbandon: () => void;
+  /** Picks the field's illustrated mentor (Dok for `tech`). Fields without a
+   * drawn character fall back to `avatarSeed`. */
+  readonly domainId: string;
+  /** Seeds the fallback avatar for fields with no character yet — same seed
+   * CoachCard uses, so it's the same face the candidate saw on the home page. */
   readonly avatarSeed: string;
   readonly turns: readonly TranscriptTurn[];
   readonly isFetchingNext: boolean;
@@ -39,12 +45,33 @@ interface ChatPaneProps {
   readonly onRetry: () => void;
 }
 
-/** The interviewer's face beside their own bubbles — same character seed
- * CoachCard uses, so it's the same character the candidate picked. */
-function PersonaAvatar({ seed }: { readonly seed: string }) {
+/**
+ * The interviewer's face beside their own bubbles.
+ *
+ * Shows the field's own mentor when one is drawn (Dok for `tech`), otherwise
+ * the seeded fallback — see `@/lib/avatar`. `alt=""` because the avatar
+ * repeats beside every interviewer message: naming it would make a screen
+ * reader announce the character before each bubble, ahead of the text that
+ * actually carries the content.
+ */
+function PersonaAvatar({
+  domainId,
+  seed,
+}: {
+  readonly domainId: string;
+  readonly seed: string;
+}) {
+  const persona = personaAvatar(domainId, seed);
+
   return (
     <div className="relative size-8 shrink-0 overflow-hidden rounded-full border border-quest-surface-border bg-quest-surface">
-      <Image src={avatarUrl(seed)} alt="" fill sizes="32px" className="object-cover" />
+      <Image
+        src={persona.src}
+        alt=""
+        fill
+        sizes="32px"
+        className={cn("object-cover", persona.className)}
+      />
     </div>
   );
 }
@@ -143,24 +170,44 @@ function PendingEvaluation() {
 function ErrorBubble({
   message,
   onRetry,
+  onAbandon,
 }: {
   message: string;
   onRetry?: () => void;
+  /** Not every error is one `onRetry` can fix — see `onAbandon`'s doc on
+   * `ChatPaneProps`. Shares `onRetry`'s undefined-when-read-only gating. */
+  onAbandon?: () => void;
 }) {
   return (
     <div className="flex max-w-[85%] flex-col items-start gap-2 self-start rounded-2xl rounded-tl-sm border-2 border-destructive bg-quest-surface px-4 py-3 text-sm text-destructive shadow-[0_8px_24px_-12px_var(--quest-glow)]">
       <span>{message}</span>
-      {onRetry && (
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={onRetry}
-          className="h-7 gap-1.5 rounded-full border-2 border-destructive text-xs text-destructive"
-        >
-          <RotateCcw className="size-3.5" />
-          Thử lại
-        </Button>
+      {(onRetry || onAbandon) && (
+        <div className="flex items-center gap-2">
+          {onRetry && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={onRetry}
+              className="h-7 gap-1.5 rounded-full border-2 border-destructive text-xs text-destructive"
+            >
+              <RotateCcw className="size-3.5" />
+              Thử lại
+            </Button>
+          )}
+          {onAbandon && (
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={onAbandon}
+              className="h-7 gap-1.5 rounded-full text-xs text-destructive/70 hover:text-destructive"
+            >
+              <RefreshCw className="size-3.5" />
+              Bắt đầu lại
+            </Button>
+          )}
+        </div>
       )}
     </div>
   );
@@ -168,6 +215,8 @@ function ErrorBubble({
 
 export function ChatPane({
   title,
+  onAbandon,
+  domainId,
   avatarSeed,
   turns,
   isFetchingNext,
@@ -228,7 +277,7 @@ export function ChatPane({
             return (
               <div key={turn.id} className="flex flex-col gap-4">
                 <div className="flex items-start gap-2">
-                  <PersonaAvatar seed={avatarSeed} />
+                  <PersonaAvatar domainId={domainId} seed={avatarSeed} />
                   <AiBubble content={turn.question.prompt} />
                 </div>
                 {turn.question.type === "multiple_choice" ? (
@@ -266,7 +315,7 @@ export function ChatPane({
           )}
           {isFetchingNext && (
             <div className="flex items-start gap-2">
-              <PersonaAvatar seed={avatarSeed} />
+              <PersonaAvatar domainId={domainId} seed={avatarSeed} />
               <PendingAiBubble />
             </div>
           )}
@@ -274,6 +323,7 @@ export function ChatPane({
             <ErrorBubble
               message={error}
               onRetry={isReadOnly ? undefined : onRetry}
+              onAbandon={isReadOnly ? undefined : onAbandon}
             />
           )}
           {isReadOnly && (

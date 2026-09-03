@@ -115,6 +115,12 @@ function isTurn(value: unknown): value is TranscriptTurn {
   return true;
 }
 
+function isWireLocale(
+  value: unknown
+): value is PersistedSession["locale"] {
+  return value === "vi-VN" || value === "en-US";
+}
+
 function isPersistedSession(value: unknown): value is PersistedSession {
   if (!isRecord(value)) return false;
   const {
@@ -127,6 +133,7 @@ function isPersistedSession(value: unknown): value is PersistedSession {
     pendingAnswer,
     sessionLength,
     experienceLevel,
+    locale,
   } = value;
 
   return (
@@ -143,6 +150,7 @@ function isPersistedSession(value: unknown): value is PersistedSession {
       typeof pendingAnswer === "string") &&
     (sessionLength === undefined || typeof sessionLength === "number") &&
     (experienceLevel === undefined || isExperienceLevel(experienceLevel)) &&
+    (locale === undefined || isWireLocale(locale)) &&
     Array.isArray(turns) &&
     turns.every(isTurn)
   );
@@ -188,6 +196,9 @@ export function loadActiveSession(): PersistedSession | null {
     pendingAnswer: parsed.pendingAnswer ?? null,
     sessionLength: parsed.sessionLength ?? 0,
     experienceLevel: parsed.experienceLevel ?? "mid",
+    // A session stored before the bank was bilingual has no locale; it was
+    // necessarily Vietnamese, since that was the only value the wire allowed.
+    locale: parsed.locale ?? "vi-VN",
   };
 }
 

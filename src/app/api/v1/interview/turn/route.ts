@@ -102,11 +102,38 @@ async function resolveGradableQuestion(
   request: TurnRequest
 ): Promise<InterviewQuestion | null> {
   const trailing = request.transcript.at(-1);
-  if (trailing) return serverModule.resolveQuestion(trailing.question.id);
+  if (trailing) {
+    // The locale travels with the re-resolution: grading an open answer
+    // measures key-point coverage, so a rubric fetched in a different
+    // language than the question was asked in would score near zero.
+    return serverModule.resolveQuestion(
+      trailing.question.id,
+      request.context.locale
+    );
+  }
 
   // No transcript but an answer present: the client answered the opening
-  // question without echoing it back. Re-derive turn 0 from the bank.
-  return serverModule.selectQuestion(request.context, 0);
+  // question without echoing it back. Re-derive turn 0 from the bank named
+  // by *this* request's specialtyId.
+  //
+  // That's weaker than it sounds, and worth being honest about: this server
+  // is stateless (§3.1), so nothing persisted the specialty the opening
+  // question actually came from — there is no record to check `specialtyId`
+  // against here, only trust that the same client sent the same value on
+  // both requests. Contrast the normal path above, where `resolveQuestion`
+  // re-derives the bank from the persisted question id itself, so a changed
+  // specialtyId on a later request can't affect grading. This branch has no
+  // id to anchor to, so a client that swaps `specialtyId` between the
+  // opening request and this one gets graded against a different bank's
+  // rubric with no error. specs/002 §5.1 already treats every request body
+  // as untrusted and reproducible with curl, so the exposure is scoped to
+  // that model: this app's own client never triggers this branch — it
+  // always echoes the trailing question into `transcript` before submitting
+  // an answer to it (see use-interview-session.ts) — but a client integrating
+  // with this API directly could self-select an easier rubric this way.
+  // Closing it for real needs server-side session state, which the
+  // architecture deliberately doesn't have.
+  return serverModule.selectQuestion(request.context, 0, request.specialtyId);
 }
 
 export async function POST(req: Request): Promise<NextResponse> {
@@ -202,7 +229,11 @@ export async function POST(req: Request): Promise<NextResponse> {
   try {
     // --- Opening request ------------------------------------------------
     if (request.pendingAnswer === null) {
-      const question = await serverModule.selectQuestion(request.context, 0);
+      const question = await serverModule.selectQuestion(
+        request.context,
+        0,
+        request.specialtyId
+      );
       if (!question) {
         logTurn({
           outcome: "INTERNAL.noOpeningQuestion",
@@ -265,7 +296,8 @@ export async function POST(req: Request): Promise<NextResponse> {
 
     const nextQuestion = await serverModule.selectQuestion(
       request.context,
-      answeredTurns
+      answeredTurns,
+      request.specialtyId
     );
     if (!nextQuestion) {
       // Bank exhausted before sessionLength — treat as completion rather

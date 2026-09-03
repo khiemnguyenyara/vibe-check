@@ -83,6 +83,17 @@ export interface PersistedSession {
    * module's server keys its question bank by this value.
    */
   readonly experienceLevel: InterviewSessionContextShape["experienceLevel"];
+  /**
+   * The language this session is being conducted in, fixed when it started.
+   *
+   * Persisted for the same reason `experienceLevel` is. Open answers are
+   * graded by how much of `expectedKeyPoints` they cover, and the server
+   * re-resolves that rubric per request — so if a resumed session picked up
+   * whatever language the UI happens to be set to now, a candidate who
+   * toggled the language mid-session would have their Vietnamese answer
+   * scored against an English rubric and land near zero.
+   */
+  readonly locale: InterviewSessionContextShape["locale"];
 }
 
 /** A finished session, appended to localStorage history (US3). */
@@ -124,7 +135,8 @@ export interface InterviewSessionContextShape {
   readonly candidateName?: string;
   readonly experienceLevel: "junior" | "mid" | "senior" | "staff";
   readonly focusAreas: readonly string[];
-  readonly locale: "vi-VN";
+  /** Wire locale tags, mirroring `Locale` in src/modules/types.ts. */
+  readonly locale: "vi-VN" | "en-US";
 }
 
 /**

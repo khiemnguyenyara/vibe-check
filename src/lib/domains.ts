@@ -26,8 +26,15 @@ import {
   Workflow,
 } from "lucide-react";
 
+import type { SpecialtyId, TechSpecialtyId } from "@/lib/specialty-ids";
+
 export interface Specialty {
-  readonly id: string;
+  /**
+   * Narrowed to the literal union in `@/lib/specialty-ids` rather than
+   * `string`, so a typo here is a compile error instead of a card that routes
+   * to a specialty no question bank can answer for.
+   */
+  readonly id: SpecialtyId;
   /** Short canonical name — used as the AI focus area and in breadcrumbs. */
   readonly label: string;
   /** Headline shown on the homepage practice card. */
@@ -64,7 +71,24 @@ export interface DomainConfig {
   readonly comingSoon?: boolean;
 }
 
-export const domains: readonly DomainConfig[] = [
+/**
+ * `as const satisfies` rather than a plain `: readonly DomainConfig[]`
+ * annotation. A type annotation widens every string in the array to its
+ * declared field type immediately, so the exact set of specialty ids present
+ * is gone by the time anything downstream could check it. `satisfies` keeps
+ * the structural check (still an error to violate `DomainConfig`) while
+ * `as const` keeps each id as its own literal — which is what makes the
+ * `_TechSpecialtyIdsMatch` assertion below possible at all.
+ *
+ * Kept internal rather than exported directly: `as const` also literalizes
+ * `comingSoon`'s absence on most entries into a per-element union of
+ * distinct object shapes (present here, missing there) instead of one
+ * `comingSoon?: boolean` shape shared by all of them, which broke every
+ * existing `.find()` caller expecting a uniform `DomainConfig`. `domains`
+ * below re-widens back to that stable public shape; only this literal
+ * binding is for the assertion to read from.
+ */
+const domainsConst = [
   {
     id: "tech",
     label: "Development",
@@ -332,7 +356,47 @@ export const domains: readonly DomainConfig[] = [
       },
     ],
   },
-];
+] as const satisfies readonly DomainConfig[];
+
+/** The public shape every existing consumer (`findDomain`, `.find()`, direct
+ * iteration) already expects — `comingSoon` optional and uniform, not a
+ * per-entry literal union. */
+export const domains: readonly DomainConfig[] = domainsConst;
+
+/* ------------------------------------------------------------------ */
+/* Compile-time drift guard                                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * `Specialty.id: SpecialtyId` (above) only catches one direction of drift: a
+ * typo'd or stale id written here fails to compile. It says nothing about
+ * the reverse — an id sitting in `TECH_SPECIALTY_IDS` (@/lib/specialty-ids)
+ * that no card here actually uses. That id would still resolve a content
+ * bank, silently unreachable from any real page, and nothing would flag it.
+ *
+ * This closes the other direction: the exact set of ids the `tech` domain
+ * declares here must equal `TechSpecialtyId`, in both directions. Follows
+ * the same local `Equals`/`Expect` pattern already used for this purpose in
+ * src/modules/types.ts and src/lib/api/interview-contract.ts — kept as its
+ * own copy rather than a shared import for the same reason those two are:
+ * each drift guard lives beside the exact pair of types it's proving equal,
+ * so the assertion and its failure are one file, not two.
+ */
+type Equals<X, Y> =
+  (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2
+    ? true
+    : false;
+
+type Expect<T extends true> = T;
+
+type DeclaredTechSpecialtyId = Extract<
+  (typeof domainsConst)[number],
+  { id: "tech" }
+>["specialties"][number]["id"];
+
+type _TechSpecialtyIdsMatch = Expect<
+  Equals<DeclaredTechSpecialtyId, TechSpecialtyId>
+>;
 
 export function findDomain(domainId: string): DomainConfig | undefined {
   return domains.find((domain) => domain.id === domainId);
