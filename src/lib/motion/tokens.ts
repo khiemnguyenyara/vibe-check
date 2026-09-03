@@ -88,7 +88,6 @@ export const MAP_ENTRY = {
   spine: 0.08,
   stations: 0.14,
   activeNode: 0.12,
-  mascot: 0.34,
 } as const;
 
 /** §8.3 `session.complete` beat offsets, in seconds. */

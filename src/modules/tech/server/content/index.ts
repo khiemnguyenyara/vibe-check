@@ -1,7 +1,11 @@
 import "server-only";
 
+import { cybersecurityBank } from "./cybersecurity";
+import { dataBank } from "./data";
+import { devopsCloudBank } from "./devops-cloud";
 import { generalBank } from "./general";
 import { assertBanksValid } from "./invariants";
+import { mobileDevelopmentBank } from "./mobile-development";
 import { qaTestingBank } from "./qa-testing";
 import { softwareDevelopmentBank } from "./software-development";
 import type { ContentBank, NonEmpty, QuestionBankEntry } from "./types";
@@ -73,6 +77,10 @@ const SPECIALTY_BANKS: Readonly<
   [webDevelopmentBank.id]: webDevelopmentBank,
   [softwareDevelopmentBank.id]: softwareDevelopmentBank,
   [qaTestingBank.id]: qaTestingBank,
+  [devopsCloudBank.id]: devopsCloudBank,
+  [dataBank.id]: dataBank,
+  [cybersecurityBank.id]: cybersecurityBank,
+  [mobileDevelopmentBank.id]: mobileDevelopmentBank,
 };
 
 /**

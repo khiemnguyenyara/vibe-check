@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { Mascot } from "@/components/mascot/mascot";
 import { ActionBubble } from "@/components/ui/action-bubble";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -102,7 +101,7 @@ function DeltaBadge({ delta }: { readonly delta: number }) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-foreground/5 px-3 py-1.5 text-xs font-bold text-muted-foreground">
         <Minus className="size-3.5" aria-hidden />
-        Không đổi so với phiên trước
+        Không đổi so với cuộc phỏng vấn trước
       </span>
     );
   }
@@ -122,7 +121,7 @@ function DeltaBadge({ delta }: { readonly delta: number }) {
         <TrendingDown className="size-3.5" aria-hidden />
       )}
       {improved ? "+" : ""}
-      <span className="tabular-nums">{delta}%</span> so với phiên trước
+      <span className="tabular-nums">{delta}%</span> so với cuộc phỏng vấn trước
     </span>
   );
 }
@@ -164,7 +163,6 @@ export function SessionSummary({
 
   const rise = riseVariants(reduced, 12);
   // §9.4 — one celebrate per completion, and never a disappointed pose.
-  const mascotState = percent >= 60 ? "celebrate" : "encouraging";
 
   return (
     <div className="h-full overflow-y-auto px-4 py-8 sm:px-8">
@@ -203,8 +201,6 @@ export function SessionSummary({
                   </span>
                 </div>
               </div>
-
-              <Mascot state={mascotState} size={64} className="hidden sm:block" />
             </div>
 
             {/* Beat 4 — the delta lands last and hardest (principle 4). */}
@@ -337,7 +333,7 @@ export function SessionSummary({
             icon={<RotateCcw className="size-4" aria-hidden />}
             onClick={onRestart}
           >
-            Luyện phiên mới
+            Tiếp tục cuộc phỏng vấn khác
           </ActionBubble>
           <Button
             type="button"

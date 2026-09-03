@@ -23,6 +23,39 @@ export const webDevelopmentBank: SpecialtyBank = {
       {
         type: "open",
         question: {
+          vi: "Khi nào thì một component là Controlled Component và khi nào là Uncontrolled Component trong React? Hãy cho ví dụ từng cái.",
+          en: "When is a component a Controlled Component and when is it Uncontrolled in React? Give examples of each.",
+        },
+        expectedKeyPoints: [
+          {
+            vi: "Controlled: form value được quản lý bởi React state, mỗi thay đổi cập nhật state",
+            en: "Controlled: form value is managed by React state; each change updates the state",
+          },
+          {
+            vi: "Uncontrolled: form value nằm trực tiếp trên DOM, React không quản lý nó",
+            en: "Uncontrolled: form value lives on the DOM; React does not manage it",
+          },
+          {
+            vi: "Ví dụ Controlled: input với onChange/value. Ví dụ Uncontrolled: input với useRef.current.value",
+            en: "Controlled example: input with onChange/value. Uncontrolled: input with useRef.current.value",
+          },
+        ],
+        rubric: {
+          maxScore: 10,
+          criteria: {
+            vi: "0-4: không phân biệt được hai loại. 5-7: phân biệt đúng nhưng ví dụ thiếu chi tiết. 8-10: phân biệt rõ ràng kèm ví dụ code chính xác.",
+            en: "0-4: cannot distinguish the two. 5-7: distinguishes correctly but examples lack detail. 8-10: clear distinction with accurate code examples.",
+          },
+        },
+        difficulty_analysis: {
+          suggestedLevel: "EASY",
+          reasoning: "Kiến thức nền tảng về form handling trong React.",
+        },
+        requiresPractice: false,
+      },
+      {
+        type: "open",
+        question: {
           vi: "Sự khác biệt giữa `useState` và `useRef` trong React là gì? Khi nào bạn sẽ chọn dùng `useRef` thay vì `useState`?",
           en: "What is the difference between `useState` and `useRef` in React? When would you reach for `useRef` instead of `useState`?",
         },
@@ -144,6 +177,39 @@ export const webDevelopmentBank: SpecialtyBank = {
         },
       },
       {
+        type: "open",
+        question: {
+          vi: "So sánh event delegation và direct event binding trong JavaScript/React. Khi nào nên dùng cái nào?",
+          en: "Compare event delegation and direct event binding in JavaScript/React. When should you use which?",
+        },
+        expectedKeyPoints: [
+          {
+            vi: "Direct binding: gắn listener trực tiếp trên phần tử, chính xác nhưng có chi phí nếu nhiều phần tử",
+            en: "Direct binding: attach a listener to each element, precise but costly with many elements",
+          },
+          {
+            vi: "Event delegation: gắn listener trên parent, xử lý bubble event từ con, tiết kiệm memory",
+            en: "Event delegation: attach to a parent, handle bubbled events, saves memory",
+          },
+          {
+            vi: "Dùng delegation cho danh sách động (item có thể thêm/xoá), dùng direct khi item ít hoặc cần chính xác",
+            en: "Use delegation for dynamic lists (items added/removed); use direct for static or where accuracy is critical",
+          },
+        ],
+        rubric: {
+          maxScore: 10,
+          criteria: {
+            vi: "0-4: chỉ biết một cách. 5-7: so sánh hai cách nhưng ví dụ không rõ. 8-10: so sánh rõ ràng kèm trường hợp sử dụng phù hợp.",
+            en: "0-4: knows only one approach. 5-7: compares them but lacks clear examples. 8-10: clear comparison with appropriate use cases.",
+          },
+        },
+        difficulty_analysis: {
+          suggestedLevel: "EASY",
+          reasoning: "Kiến thức nền tảng về event handling trong web.",
+        },
+        requiresPractice: false,
+      },
+      {
         type: "multiple_choice",
         question: {
           vi: "Với `box-sizing: border-box`, một phần tử có `width: 200px; padding: 20px; border: 5px solid` sẽ chiếm chiều rộng tổng cộng bao nhiêu?",
@@ -161,6 +227,25 @@ export const webDevelopmentBank: SpecialtyBank = {
           suggestedLevel: "EASY",
           reasoning:
             "Hiểu đúng box model là điều kiện cần để làm layout CSS không bị lệch.",
+        },
+      },
+      {
+        type: "multiple_choice",
+        question: {
+          vi: "Trong HTML, khi nào nên dùng `<section>` thay vì `<div>`?",
+          en: "In HTML, when should you use `<section>` instead of `<div>`?",
+        },
+        options: [
+          { vi: "Luôn dùng thay cho div vì nó ngữ nghĩa hơn", en: "Always use it instead of div because it is more semantic" },
+          { vi: "Khi section này là một phần có ý nghĩa riêng của trang, có thể có heading của riêng nó", en: "When this is a meaningful section of the page with its own content and potentially its own heading" },
+          { vi: "Chỉ dùng khi bạn cần group styling", en: "Only when you need to group styling" },
+          { vi: "Không nên dùng, nó không có lợi ích gì so với div", en: "Never use it; it has no benefit over div" },
+        ],
+        correctOptionIndex: 1,
+        maxScore: 10,
+        difficulty_analysis: {
+          suggestedLevel: "EASY",
+          reasoning: "Hiểu đúng khi dùng semantic HTML tags trong thực tế.",
         },
       },
     ],
@@ -321,6 +406,43 @@ export const webDevelopmentBank: SpecialtyBank = {
         requiresPractice: false,
       },
       {
+        type: "open",
+        question: {
+          vi: "Bạn xây dựng một infinite scroll list, mỗi lần cuộn tới cuối sẽ fetch thêm item. Vấn đề gì có thể xảy ra, và bạn kiểm soát nó như thế nào (mà không dùng thư viện)?",
+          en: "You build an infinite scroll list that fetches more items when scrolling near the bottom. What can go wrong, and how do you prevent it without a library?",
+        },
+        expectedKeyPoints: [
+          {
+            vi: "Vấn đề: fetch được trigger nhiều lần trong khi request vẫn chưa xong",
+            en: "Issue: the fetch is triggered multiple times while the previous request is still pending",
+          },
+          {
+            vi: "Kinh điển: race condition khi request A quay lại sau request B, thứ tự item bị lệch",
+            en: "Classic: race condition if request A returns after B, items arrive out of order",
+          },
+          {
+            vi: "Giải pháp: dùng flag `isLoading` để chặn fetch mới khi fetch đang chạy",
+            en: "Solution: use an `isLoading` flag to prevent new fetches while one is pending",
+          },
+          {
+            vi: "Nâng cao: dùng cleanup function hoặc AbortController để huỷ request cũ khi component unmount",
+            en: "Advanced: use a cleanup function or AbortController to cancel old requests on unmount",
+          },
+        ],
+        rubric: {
+          maxScore: 10,
+          criteria: {
+            vi: "0-4: chỉ biết nó fetch thêm. 5-7: nêu được vấn đề race condition. 8-10: nêu rõ vấn đề và cách kiểm soát bằng flag hoặc AbortController.",
+            en: "0-4: barely describes the fetch. 5-7: names the race condition issue. 8-10: clearly states the issue and a control method with a flag or AbortController.",
+          },
+        },
+        difficulty_analysis: {
+          suggestedLevel: "MEDIUM",
+          reasoning: "Xử lý race condition là kỹ năng quan trọng cho Mid-level.",
+        },
+        requiresPractice: false,
+      },
+      {
         type: "multiple_choice",
         question: {
           vi: "Trong React, hook nào phù hợp nhất để memo hoá kết quả của một phép tính tốn kém, tránh tính lại mỗi lần re-render nếu dependencies không đổi?",
@@ -338,6 +460,43 @@ export const webDevelopmentBank: SpecialtyBank = {
           suggestedLevel: "MEDIUM",
           reasoning: "Phân biệt đúng công dụng các hook tối ưu hoá trong React.",
         },
+      },
+      {
+        type: "open",
+        question: {
+          vi: "CSS-in-JS (styled-components, Emotion) vs CSS Module vs Tailwind: khi nào dùng cái nào? Trade-off giữa chúng là gì?",
+          en: "CSS-in-JS (styled-components, Emotion) vs CSS Modules vs Tailwind: when do you use which? What are the trade-offs?",
+        },
+        expectedKeyPoints: [
+          {
+            vi: "CSS-in-JS: thành phần và style gắn chặt, dễ xoá khi xoá component, nhưng phải parse CSS lúc runtime",
+            en: "CSS-in-JS: components and styles are coupled, easy to delete together, but CSS is parsed at runtime",
+          },
+          {
+            vi: "CSS Module: tách CSS/JS nhưng tránh naming conflict, nhưng cần xây dựng dự phòng CSS",
+            en: "CSS Modules: separate CSS and JS, avoid name collisions, but require a build step",
+          },
+          {
+            vi: "Tailwind: style trực tiếp trong HTML/JSX qua class, nhanh phát triển, nhưng HTML dài và khó dùng dynamic style",
+            en: "Tailwind: style via classes inline, fast development, but markup bloat and hard to do dynamic styles",
+          },
+          {
+            vi: "Chọn dựa trên quy mô dự án, team familiarity, và yêu cầu performance",
+            en: "Choose based on project scale, team familiarity, and performance requirements",
+          },
+        ],
+        rubric: {
+          maxScore: 10,
+          criteria: {
+            vi: "0-4: chỉ nêu một cách. 5-7: so sánh hai cách nhưng thiếu trade-off. 8-10: so sánh rõ với trade-off cụ thể.",
+            en: "0-4: mentions only one approach. 5-7: compares two but misses the trade-offs. 8-10: compares all three with specific trade-offs.",
+          },
+        },
+        difficulty_analysis: {
+          suggestedLevel: "MEDIUM",
+          reasoning: "Lựa chọn công cụ styling là quyết định kiến trúc hàng ngày.",
+        },
+        requiresPractice: false,
       },
     ],
     senior: [
@@ -510,6 +669,43 @@ export const webDevelopmentBank: SpecialtyBank = {
         requiresPractice: false,
       },
       {
+        type: "open",
+        question: {
+          vi: "Quản lý complexity trong một component lớn: khi nào bạn chia nhỏ thành subcomponent, khi nào dùng custom hook, và khi nào dùng cả hai?",
+          en: "Managing complexity in a large component: when do you split into subcomponents, when do you extract a custom hook, and when do you do both?",
+        },
+        expectedKeyPoints: [
+          {
+            vi: "Subcomponent: khi logic được nhóm lại với một phần UI riêng biệt, tách để tái sử dụng hoặc test",
+            en: "Subcomponent: when logic is grouped with a distinct UI fragment, separated for reuse or testing",
+          },
+          {
+            vi: "Custom hook: khi logic có thể tái sử dụng độc lập với UI (trích xuất state/effect)",
+            en: "Custom hook: when stateful logic can be reused independently of UI (extract state and effects)",
+          },
+          {
+            vi: "Cả hai: stateful logic trích thành hook, component trích để dùng hook đó và render UI riêng",
+            en: "Both: extract stateful logic as a hook, extract component to use the hook and render its own UI",
+          },
+          {
+            vi: "Dấu hiệu chia nhỏ: component khó test, render props ngoài khả năng hiểu được",
+            en: "Signs to split: hard to test, render output becomes hard to follow",
+          },
+        ],
+        rubric: {
+          maxScore: 10,
+          criteria: {
+            vi: "0-4: chỉ biết một cách chia nhỏ. 5-7: nêu được subcomponent và hook nhưng không rõ khi nào dùng. 8-10: phân biệt rõ ràng kèm ví dụ khi dùng cả hai.",
+            en: "0-4: knows only one extraction approach. 5-7: names subcomponent and hook but unclear on when. 8-10: clear distinction with examples of when to use both.",
+          },
+        },
+        difficulty_analysis: {
+          suggestedLevel: "HARD",
+          reasoning: "Điều này là về thiết kế component, kỹ năng kiến trúc của Senior.",
+        },
+        requiresPractice: false,
+      },
+      {
         type: "multiple_choice",
         question: {
           vi: "Chỉ số Core Web Vitals nào đo mức độ ổn định của bố cục trang, tức là các phần tử nhảy vị trí ngoài ý muốn trong quá trình tải?",
@@ -537,6 +733,47 @@ export const webDevelopmentBank: SpecialtyBank = {
           reasoning:
             "Phân biệt đúng các chỉ số Core Web Vitals là điều kiện cần để tối ưu có mục tiêu.",
         },
+      },
+      {
+        type: "open",
+        question: {
+          vi: "Giải thích sự khác biệt giữa Progressive Enhancement và Graceful Degradation. Khi nào nên dùng cái nào, đặc biệt với JavaScript?",
+          en: "Explain Progressive Enhancement vs Graceful Degradation. When should you use which, especially with JavaScript?",
+        },
+        expectedKeyPoints: [
+          {
+            vi: "Progressive Enhancement: xây dựng tính năng cơ bản trước (HTML), sau đó thêm JS để nâng cao",
+            en: "Progressive Enhancement: build basic functionality first (HTML), then layer JS on top",
+          },
+          {
+            vi: "Graceful Degradation: xây dựng cho trình duyệt hiện đại rồi lo cách fallback cho trình duyệt cũ",
+            en: "Graceful Degradation: build for modern browsers, then add fallbacks for older ones",
+          },
+          {
+            vi: "Progressive Enhancement: form còn hoạt động nếu JS bị block/lỗi, tốt hơn cho accessibility",
+            en: "Progressive Enhancement: forms still work if JS fails or is blocked, better for accessibility",
+          },
+          {
+            vi: "Graceful Degradation: dễ dàng hơn vì không cần cân nhắc trường hợp không JS",
+            en: "Graceful Degradation: easier because no need to consider no-JS scenarios",
+          },
+          {
+            vi: "Thực tế: Progressive Enhancement phù hợp hơn cho trang nội dung, Graceful Degradation cho ứng dụng web phức tạp",
+            en: "In practice: PE fits content sites better, GD fits complex web apps",
+          },
+        ],
+        rubric: {
+          maxScore: 10,
+          criteria: {
+            vi: "0-4: nhầm lẫn hai khái niệm. 5-7: phân biệt đúng nhưng không biết khi nào dùng. 8-10: phân biệt rõ ràng kèm trường hợp sử dụng phù hợp.",
+            en: "0-4: confuses the two concepts. 5-7: distinguishes correctly but unsure when to use. 8-10: clear distinction with appropriate contexts.",
+          },
+        },
+        difficulty_analysis: {
+          suggestedLevel: "HARD",
+          reasoning: "Kiến thức về web fundamentals và tư duy design ở tầm Senior.",
+        },
+        requiresPractice: false,
       },
     ],
     staff: [
@@ -671,6 +908,47 @@ export const webDevelopmentBank: SpecialtyBank = {
           suggestedLevel: "HARD",
           reasoning:
             "Kết hợp kế hoạch kỹ thuật quy mô lớn với việc thuyết phục ngoài phạm vi kỹ thuật — tầm Staff.",
+        },
+        requiresPractice: false,
+      },
+      {
+        type: "open",
+        question: {
+          vi: "Bạn được giao trách nhiệm xây dựng chiến lược learning path cho các frontend dev junior và mid, từ kiến thức nền tảng đến senior-level. Bạn sắp xếp như thế nào?",
+          en: "You are asked to design a learning path for junior and mid-level frontend developers to reach seniority. How do you structure it?",
+        },
+        expectedKeyPoints: [
+          {
+            vi: "Junior: nền tảng HTML/CSS/JavaScript/React, hiểu component lifecycle, event handling",
+            en: "Junior: HTML/CSS/JS fundamentals, component lifecycle, event handling",
+          },
+          {
+            vi: "Mid: performance tuning, accessibility, testing (unit + integration), code patterns",
+            en: "Mid: performance, accessibility, testing (unit and integration), design patterns",
+          },
+          {
+            vi: "Senior: kiến trúc, mentoring, cross-platform thinking, system thinking",
+            en: "Senior: architecture, mentoring others, cross-platform thinking, systems thinking",
+          },
+          {
+            vi: "Không phải tuyến tính: mid cần hiểu accessibility/testing sớm, không chờ lên senior",
+            en: "Not linear: mid should learn accessibility and testing early, not wait for senior",
+          },
+          {
+            vi: "Dùng project thực tế làm bối cảnh học, không chỉ tutorial",
+            en: "Use real projects as learning context, not just tutorials",
+          },
+        ],
+        rubric: {
+          maxScore: 10,
+          criteria: {
+            vi: "0-3: chỉ liệt kê chủ đề. 4-6: phân chia ba tầm độ hợp lý. 7-8: có trình tự học tập phù hợp. 9-10: nêu rõ overlaps và dùng project thực tế.",
+            en: "0-3: lists topics only. 4-6: divides the three levels sensibly. 7-8: has a learning progression. 9-10: explains overlaps and uses real projects.",
+          },
+        },
+        difficulty_analysis: {
+          suggestedLevel: "HARD",
+          reasoning: "Thiết kế learning path là trách nhiệm mentorship ở tầm Staff.",
         },
         requiresPractice: false,
       },

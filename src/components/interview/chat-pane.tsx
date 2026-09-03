@@ -328,7 +328,7 @@ export function ChatPane({
           )}
           {isReadOnly && (
             <p className="self-center rounded-full bg-foreground/5 px-3 py-1 text-xs font-medium text-muted-foreground">
-              Phiên phỏng vấn đã kết thúc
+              Cuộc phỏng vấn đã kết thúc
             </p>
           )}
           <div ref={bottomRef} />
