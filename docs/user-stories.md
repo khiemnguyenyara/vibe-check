@@ -34,16 +34,16 @@ Là một ứng viên, tôi muốn khai báo level kinh nghiệm (junior/mid/sen
 ### 2.2. Vòng lặp phỏng vấn
 
 **US-03 [MVP] — Domain:** `tech`
-Là một ứng viên, tôi muốn AI đặt câu hỏi kỹ thuật phù hợp với level và focus area tôi đã chọn, để buổi luyện tập sát với phỏng vấn thật.
+Là một ứng viên, tôi muốn mentor đặt câu hỏi kỹ thuật phù hợp với level và focus area tôi đã chọn, để buổi luyện tập sát với phỏng vấn thật.
 
 - AC1: `techModule.getSystemPrompt(context)` phản ánh `experienceLevel` và `focusAreas` trong nội dung prompt (kiểm chứng bằng snapshot test ở giai đoạn triển khai).
-- AC2: Câu hỏi đầu tiên xuất hiện trong Chat pane trong vòng < 5s sau khi khởi tạo phiên (NFR, đo ở giai đoạn triển khai AI Gateway).
+- AC2: Câu hỏi đầu tiên xuất hiện trong Chat pane trong vòng < 5s sau khi khởi tạo phiên (NFR, đo ở giai đoạn triển khai mentor system).
 
 **US-04 [MVP] — Domain:** `tech`
 Là một ứng viên, tôi muốn có một khu vực làm bài riêng biệt (viết code / vẽ sơ đồ) tách khỏi khung chat, để tôi không phải trộn lẫn câu trả lời tự luận với phần thực hành.
 
 - AC1: `TechWorkspace` render trong Workspace pane theo layout chuẩn ở `design-system.md`.
-- AC2: Nội dung người dùng nhập trong Workspace được gửi lên qua `onSubmit` đúng shape `WorkspaceSubmission`, không gọi thẳng AI Gateway.
+- AC2: Nội dung người dùng nhập trong Workspace được gửi lên qua `onSubmit` đúng shape `WorkspaceSubmission`, không gọi thẳng mentor system.
 
 **US-05 [MVP] — Domain:** `core`
 Là một ứng viên, tôi muốn thấy rõ trạng thái hiện tại của phiên (đang diễn ra / tạm dừng / đã hoàn thành), để tôi biết khi nào có thể tiếp tục hay đã kết thúc.

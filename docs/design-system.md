@@ -7,7 +7,7 @@
 
 ## 1. Triết lý thiết kế
 
-Vibe Check có một layout nghiệp vụ **bất biến qua mọi domain**: một phiên phỏng vấn luôn gồm **Chat pane** (hội thoại với AI) và **Workspace pane** (không gian làm bài đặc thù domain). Design system này định nghĩa phần khung (chrome) dùng chung và ranh giới rõ ràng cho phần mà mỗi domain được tự do tuỳ biến bên trong.
+Vibe Check có một layout nghiệp vụ **bất biến qua mọi domain**: một phiên phỏng vấn luôn gồm **Chat pane** (hội thoại với mentor) và **Workspace pane** (không gian làm bài đặc thù domain). Design system này định nghĩa phần khung (chrome) dùng chung và ranh giới rõ ràng cho phần mà mỗi domain được tự do tuỳ biến bên trong.
 
 Nguyên tắc: **domain module không bao giờ tự quyết định layout tổng thể** — nó chỉ điền nội dung vào một vùng đã được Core cấp sẵn kích thước, scroll behavior, và responsive rules.
 
@@ -67,7 +67,7 @@ src/app/page.tsx                             → page.styles.ts
 ├───────────────────────────┬────────────────────────────────┤
 │                           │                                │
 │      Chat Pane            │        Workspace Pane          │
-│  (hội thoại AI ↔ user)    │   (module.Workspace render ở đây) │
+│  (hội thoại mentor ↔ user)│   (module.Workspace render ở đây) │
 │                           │                                │
 │  - scroll độc lập         │   - scroll độc lập              │
 │  - luôn hiển thị          │   - có thể collapse trên mobile  │
@@ -86,15 +86,15 @@ src/app/page.tsx                             → page.styles.ts
 | | Chat Pane | Workspace Pane |
 |---|---|---|
 | **Sở hữu bởi** | Core (`src/app` + `src/components`) | Domain module (`module.Workspace`), đặt trong khung do Core cấp |
-| **Nội dung** | Lịch sử hội thoại, input box, trạng thái "AI đang trả lời" | Hoàn toàn do domain quyết định (code editor, case-study canvas, content brief...) |
+| **Nội dung** | Lịch sử hội thoại, input box, trạng thái "mentor đang trả lời" | Hoàn toàn do domain quyết định (code editor, case-study canvas, content brief...) |
 | **Được domain tuỳ biến?** | Không — domain không render trực tiếp vào Chat Pane | Có — toàn quyền bên trong khung, miễn tuân thủ props ở `interface-contracts.md` |
 | **Responsive** | Core xử lý | Domain tự chịu trách nhiệm responsive *bên trong* khung được cấp (Core chỉ đảm bảo khung có kích thước hợp lý) |
 
 ### 3.3. Quy tắc không thoả hiệp
 
 1. **Workspace không được render fixed/absolute ra ngoài khung của nó** (vd. modal toàn màn hình che cả Chat pane) trừ khi dùng `Dialog`/`Sheet` chuẩn của Shadcn — vì lúc đó nó là tương tác tạm thời được Core kiểm soát z-index, không phải domain tự ý chiếm layout.
-2. **Chat Pane luôn phải visible hoặc truy cập được trong 1 thao tác** (kể cả trên mobile ở chế độ tab) — đây là kênh duy nhất người dùng thấy phản hồi AI, không được ẩn sâu.
-3. **Trạng thái loading/streaming của AI hiển thị trong Chat Pane, không phải Workspace** — Workspace chỉ phản ánh `SessionStatus` được truyền qua props (đã định nghĩa ở `interface-contracts.md`), không tự vẽ thêm loading indicator cho việc AI đang suy nghĩ.
+2. **Chat Pane luôn phải visible hoặc truy cập được trong 1 thao tác** (kể cả trên mobile ở chế độ tab) — đây là kênh duy nhất người dùng thấy phản hồi từ mentor, không được ẩn sâu.
+3. **Trạng thái loading/streaming của mentor hiển thị trong Chat Pane, không phải Workspace** — Workspace chỉ phản ánh `SessionStatus` được truyền qua props (đã định nghĩa ở `interface-contracts.md`), không tự vẽ thêm loading indicator cho việc mentor đang suy nghĩ.
 
 ## 4. Theming
 

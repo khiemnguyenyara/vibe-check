@@ -33,7 +33,7 @@ export const jobSpecialties: readonly JobSpecialty[] = [
   { id: "design", label: "Design", icon: Palette },
   { id: "writing", label: "Writing", icon: PenLine },
   { id: "marketing", label: "Marketing", icon: Megaphone },
-  { id: "ai-data", label: "AI & Data", icon: Brain },
+  { id: "ai-data", label: "Data Science", icon: Brain },
   { id: "video", label: "Video", icon: Film },
   { id: "business", label: "Business", icon: Briefcase },
   { id: "admin", label: "Admin", icon: ClipboardList },

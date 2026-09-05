@@ -73,9 +73,7 @@ export function FieldView({
             <p className={styles.subtitle}>{copy.description}</p>
           </motion.div>
 
-          {hero.mentor && (
-            <FieldMentor image={hero.mentor.image} name={hero.mentor.name} />
-          )}
+          {hero.mentor && <FieldMentor />}
 
           <div className={styles.carouselSection}>
             <SpecialtyCarousel nodes={nodes} onActivate={handleEnter} />
@@ -93,8 +91,6 @@ export function FieldView({
       >
         {lockNotice}
       </p>
-
-      <SiteFooter domainId={domainConfig.id} />
 
       <LevelPickerDialog
         open={pendingNode !== null}

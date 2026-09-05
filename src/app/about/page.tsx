@@ -19,8 +19,6 @@ export default function AboutPage() {
           {t.footer.description}
         </p>
       </main>
-
-      <SiteFooter />
     </div>
   );
 }

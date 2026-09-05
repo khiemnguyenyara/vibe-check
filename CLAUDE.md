@@ -1,14 +1,14 @@
 # VIBE CHECK - Project Context
 
 ## Overview
-Dự án là nền tảng AI Mock Interview đa lĩnh vực (Multi-domain). 
+Dự án là nền tảng Mock Interview mô phỏng đa lĩnh vực (Multi-domain) với mentor ảo. 
 Kiến trúc chính: Module-based với `modules/` folder. Mỗi domain (tech, marketing,...) có `index.ts`, `prompt.ts`, và `workspace.tsx`.
 
 ## Tech Stack
 - Framework: Next.js 15 (App Router)
 - Language: TypeScript
 - UI: Tailwind CSS, Shadcn/UI
-- AI: Vercel AI SDK, OpenAI
+- Backend Integration: API-based mentor system
 - State Management: React Hooks/Context
 
 ## Coding Guidelines

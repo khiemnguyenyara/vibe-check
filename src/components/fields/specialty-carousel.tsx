@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
   motion,
   useAnimationFrame,
@@ -41,6 +41,7 @@ export function SpecialtyCarousel({
 }) {
   const reduced = useReducedMotion() ?? false;
   const pausedRef = useRef(false);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const percent = useMotionValue(0);
   const x = useTransform(percent, (v) => `${v}%`);
   const duration = nodes.length * SECONDS_PER_ITEM;
@@ -59,8 +60,26 @@ export function SpecialtyCarousel({
     pausedRef.current = false;
   };
 
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const sensitivity = 0.02;
+      const percentDelta = -(e.deltaX + e.deltaY) * sensitivity;
+      const next = percent.get() + percentDelta;
+      const clamped = Math.max(-50, Math.min(0, next));
+      percent.set(clamped);
+    };
+
+    viewport.addEventListener("wheel", handleWheel, { passive: false });
+    return () => viewport.removeEventListener("wheel", handleWheel);
+  }, []);
+
   return (
     <div
+      ref={viewportRef}
       className={styles.viewport}
       onMouseEnter={pause}
       onMouseLeave={resume}

@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { Sparkles } from "lucide-react";
 
 import { fieldHeroFor } from "@/components/fields/field-hero";
 import { useLocale } from "@/lib/i18n/locale-context";
@@ -51,11 +50,9 @@ export function SiteFooter({
           className={siteFooterStyles.logo}
         />
         <span className={siteFooterStyles.tagline}>
-          <Sparkles className={siteFooterStyles.taglineIcon} aria-hidden />
           {t.footer.tagline}
         </span>
         <p className={siteFooterStyles.description}>{t.footer.description}</p>
-        <p className={siteFooterStyles.copyright}>{t.footer.copyright}</p>
       </div>
     </footer>
   );

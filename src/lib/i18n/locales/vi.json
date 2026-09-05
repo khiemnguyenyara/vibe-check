@@ -22,21 +22,21 @@
     "submit": "Bắt đầu luyện tập"
   },
   "footer": {
-    "tagline": "Luyện phỏng vấn cùng AI",
-    "description": "Chọn đúng chuyên môn, trả lời như phỏng vấn thật, và nhận điểm cùng nhận xét ngay sau mỗi câu.",
+    "tagline": "Bạn muốn phỏng vấn giỏi hơn?",
+    "description": "Cùng luyện tập cùng Mads",
     "copyright": "© 2026 Vibe Check"
   },
   "home": {
-    "title": "Bạn muốn làm gì hôm nay?",
+    "title": "Bạn đang muốn",
     "subtitle": "Chọn một lựa chọn bên dưới để bắt đầu.",
     "startInterview": {
-      "title": "Bắt đầu phỏng vấn ngay",
+      "title": "Chuẩn bị cho buổi phỏng vấn?",
       "body": "Chọn đúng ngành và chuyên môn của bạn, rồi vào luyện phỏng vấn ngay lập tức.",
       "cta": "Bắt đầu ngay"
     },
     "improveCv": {
-      "title": "Cải thiện CV của bạn",
-      "body": "AI chấm và gợi ý chỉnh sửa CV, giúp hồ sơ của bạn nổi bật hơn.",
+      "title": "CV trông nổi bật hơn?",
+      "body": "Tham khảo các CV mẫu để làm CV của bạn nổi bật hơn.",
       "badge": "Sắp ra mắt"
     },
     "field": {

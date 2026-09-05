@@ -51,7 +51,7 @@ export function LevelPickerDialog({
           Chọn độ khó buổi luyện tập
         </DialogTitle>
         <p className="-mt-2 text-xs text-muted-foreground">
-          Độ khó sẽ quyết định mức độ câu hỏi AI đặt ra cho {specialtyLabel}{" "}
+          Độ khó sẽ quyết định mức độ câu hỏi mentor đặt ra cho {specialtyLabel}{" "}
           trong suốt buổi luyện này.
         </p>
 

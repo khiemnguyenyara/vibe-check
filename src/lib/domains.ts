@@ -35,7 +35,7 @@ export interface Specialty {
    * to a specialty no question bank can answer for.
    */
   readonly id: SpecialtyId;
-  /** Short canonical name — used as the AI focus area and in breadcrumbs. */
+  /** Short canonical name — used as the mentor focus area and in breadcrumbs. */
   readonly label: string;
   /** Headline shown on the homepage practice card. */
   readonly title: string;
@@ -93,7 +93,7 @@ const domainsConst = [
     id: "tech",
     label: "Development",
     sectionTitle: "Công nghệ",
-    description: "Web, mobile, AI, DevOps — luyện phỏng vấn kỹ thuật thực tế.",
+    description: "Web, mobile, DevOps, và hơn nữa — luyện phỏng vấn kỹ thuật thực tế.",
     icon: Code2,
     theme: {
       text: "text-green-600",
@@ -131,9 +131,9 @@ const domainsConst = [
       },
       {
         id: "ai-ml",
-        label: "AI & ML",
-        title: "AI & ML",
-        description: "Machine learning, mô hình hóa và triển khai AI.",
+        label: "Machine Learning",
+        title: "Machine Learning",
+        description: "Machine learning, mô hình hóa và triển khai ML.",
         icon: Brain,
         difficulty: 3,
       },

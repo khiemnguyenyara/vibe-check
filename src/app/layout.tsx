@@ -21,7 +21,7 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   title: "Vibe Check",
-  description: "AI Mock Interview",
+  description: "Mock Interview Platform with Expert Mentor",
   icons: {
     icon: "/vibe-check-mark.png",
   },

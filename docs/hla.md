@@ -6,9 +6,9 @@
 
 ## 1. Bối cảnh sản phẩm
 
-Vibe Check là nền tảng **AI Mock Interview**: người dùng luyện phỏng vấn với một AI interviewer, nhận phản hồi và đánh giá theo thời gian thực. MVP tập trung vào domain **Tech** (phỏng vấn kỹ thuật: coding, system design, behavioral). Roadmap mở rộng sang **Marketing** và **Content** — mỗi domain có bộ câu hỏi, tiêu chí đánh giá, và giao diện làm bài khác nhau (coding editor vs. case-study canvas vs. content brief).
+Vibe Check là nền tảng **Mock Interview** mô phỏng: người dùng luyện phỏng vấn với một mentor ảo, nhận phản hồi và đánh giá theo thời gian thực. MVP tập trung vào domain **Tech** (phỏng vấn kỹ thuật: coding, system design, behavioral). Roadmap mở rộng sang **Marketing** và **Content** — mỗi domain có bộ câu hỏi, tiêu chí đánh giá, và giao diện làm bài khác nhau (coding editor vs. case-study canvas vs. content brief).
 
-Vì mỗi domain khác nhau về *nội dung* (prompt, tiêu chí chấm) và *trải nghiệm* (UI làm bài), nhưng giống nhau về *cơ chế* (phiên phỏng vấn, hội thoại với AI, chấm điểm, lưu kết quả), kiến trúc phải tách rời hai trục này: **Core** (bất biến, dùng chung) và **Module** (thay đổi theo domain, cắm vào Core qua một hợp đồng cố định).
+Vì mỗi domain khác nhau về *nội dung* (câu hỏi, tiêu chí chấm) và *trải nghiệm* (UI làm bài), nhưng giống nhau về *cơ chế* (phiên phỏng vấn, hội thoại với mentor, chấm điểm, lưu kết quả), kiến trúc phải tách rời hai trục này: **Core** (bất biến, dùng chung) và **Module** (thay đổi theo domain, cắm vào Core qua một hợp đồng cố định).
 
 ## 2. Nguyên tắc kiến trúc
 
@@ -29,7 +29,7 @@ flowchart TB
     subgraph Core["Core (src/app, src/lib, src/components)"]
         Shell[Interview Shell<br/>Chat pane + Workspace pane]
         SessionEngine[Session Engine<br/>quản lý trạng thái phiên phỏng vấn]
-        AIGateway[AI Gateway<br/>src/lib/ai]
+        MentorGateway[Mentor Gateway<br/>src/lib/ai]
         Registry[Module Registry<br/>src/modules/registry.ts]
     end
 
@@ -45,8 +45,8 @@ flowchart TB
     Registry -.lookup theo id.-> Tech
     Registry -.lookup theo id.-> Marketing
     Registry -.lookup theo id.-> Future
-    SessionEngine --> AIGateway
-    Tech -- "getSystemPrompt(context)" --> AIGateway
+    SessionEngine --> MentorGateway
+    Tech -- "getSystemPrompt(context)" --> MentorGateway
     Tech -- "Workspace component" --> Shell
 ```
 
@@ -70,14 +70,14 @@ sequenceDiagram
     participant Shell as Interview Shell (Core)
     participant Engine as Session Engine (Core)
     participant Mod as Domain Module (vd. tech)
-    participant AI as AI Gateway (src/lib/ai)
+    participant Mentor as Mentor System (src/lib/ai)
 
     U->>Shell: Trả lời / thao tác trong Workspace
     Shell->>Engine: onSubmit(WorkspaceSubmission)
     Engine->>Mod: getSystemPrompt(sessionContext)
     Mod-->>Engine: system prompt (string, đặc thù domain)
-    Engine->>AI: gửi { systemPrompt, history, submission }
-    AI-->>Engine: streaming response
+    Engine->>Mentor: gửi { systemPrompt, history, submission }
+    Mentor-->>Engine: streaming response
     Engine-->>Shell: cập nhật Chat pane + SessionStatus
     Shell-->>Mod: props mới (status, context) cho Workspace
 ```
@@ -113,7 +113,7 @@ Khi số lượng domain vượt quá ~8–10, cân nhắc chuyển sang cơ ch�
 |---|---|---|---|
 | `src/app` | Routing, layout, page composition | `src/lib`, `src/components`, `src/modules/registry` | `src/modules/<domain>` trực tiếp |
 | `src/components/ui` | Shadcn/UI primitives, không chứa business logic | — | `src/modules/*`, `src/lib/ai` |
-| `src/lib` | Helper thuần, cấu hình AI, dùng chung cho mọi domain | (không phụ thuộc ngược vào app/modules) | `src/modules/*` |
+| `src/lib` | Helper thuần, cấu hình mentor, dùng chung cho mọi domain | (không phụ thuộc ngược vào app/modules) | `src/modules/*` |
 | `src/modules/<domain>` | Prompt + Workspace UI đặc thù domain | `src/modules/types`, `src/lib` | `src/modules/<domain-khác>` |
 | `src/modules/registry.ts` | Điểm nối duy nhất Core ↔ Modules | tất cả `src/modules/<domain>` | — |
 
@@ -121,7 +121,7 @@ Ranh giới này nên được enforce bằng ESLint (`no-restricted-imports` th
 
 ## 7. Tại sao kiến trúc này hỗ trợ multi-domain
 
-- Thêm domain **Marketing** hay **Content** không đòi hỏi hiểu Session Engine hay AI Gateway hoạt động thế nào — chỉ cần implement đúng `ModuleDefinition` (xem `interface-contracts.md`).
+- Thêm domain **Marketing** hay **Content** không đòi hỏi hiểu Session Engine hay Mentor System hoạt động thế nào — chỉ cần implement đúng `ModuleDefinition` (xem `interface-contracts.md`).
 - Rủi ro regression khi thêm domain mới bị giới hạn trong chính folder domain đó, vì không có shared mutable state giữa các module.
 - Core có thể phát triển độc lập (vd. thêm tính năng ghi âm, chấm điểm bằng giọng nói) mà không cần từng domain thay đổi, miễn là các bổ sung đó không phá vỡ `ModuleDefinition` hiện có (xem nguyên tắc versioning trong `interface-contracts.md`).
 

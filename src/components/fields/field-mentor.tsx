@@ -17,12 +17,8 @@ import { fieldMentorStyles as styles } from "./field-mentor.styles";
  * fine here without reopening §9's decision.
  */
 export function FieldMentor({
-  image,
-  name,
   line,
 }: {
-  readonly image: string;
-  readonly name: string;
   readonly line?: string;
 }) {
   const reduced = useReducedMotion() ?? false;
@@ -35,16 +31,6 @@ export function FieldMentor({
       custom={0}
       className={styles.root}
     >
-      <span className={styles.avatarRing}>
-        <Image
-          src={image}
-          alt={name}
-          width={160}
-          height={160}
-          className={styles.avatarImage}
-          priority
-        />
-      </span>
       {line && <p className={styles.line}>{line}</p>}
     </motion.div>
   );

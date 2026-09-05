@@ -71,8 +71,6 @@ export default function FieldsPage() {
           </div>
         </div>
       </main>
-
-      <SiteFooter />
     </div>
   );
 }
