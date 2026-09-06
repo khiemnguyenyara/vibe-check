@@ -45,7 +45,6 @@ const MENTOR_CHARACTERS: Record<
 
 export function MentorCharacterSection({
   selectedDomain,
-  reduced,
 }: {
   selectedDomain: string | null;
   reduced: boolean;
@@ -53,7 +52,7 @@ export function MentorCharacterSection({
   const router = useRouter();
   const [displayedMentor, setDisplayedMentor] = useState<string | null>(null);
   const [isSpecialtyPickerOpen, setIsSpecialtyPickerOpen] = useState(false);
-  const { reaction, happy, correct } = useCharacterReaction();
+  const { reaction, happy } = useCharacterReaction();
 
   useEffect(() => {
     if (selectedDomain) {
@@ -71,8 +70,9 @@ export function MentorCharacterSection({
   const isLocked = !selectedDomain;
 
   const handleGetStarted = () => {
-    correct();
-    setIsSpecialtyPickerOpen(true);
+    if (displayedMentor) {
+      router.push(`/field/${displayedMentor}`);
+    }
   };
 
   const handleMascotClick = () => {

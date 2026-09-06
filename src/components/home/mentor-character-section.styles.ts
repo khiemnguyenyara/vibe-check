@@ -10,7 +10,7 @@ export const mentorCharacterStyles = {
   mentorTitle: "text-lg sm:text-xl font-semibold text-primary",
   mentorDescription: "text-sm sm:text-base text-muted-foreground max-w-sm",
   ctaButton:
-    "mt-6 px-8 py-4 rounded-lg font-semibold text-white transition-all hover:shadow-lg",
+    "mt-6 px-8 py-4 rounded-lg font-semibold text-black transition-all hover:shadow-lg",
   lockedState:
     "w-full h-full flex flex-col items-center justify-center gap-4 text-muted-foreground",
   lockIcon: "text-6xl",
