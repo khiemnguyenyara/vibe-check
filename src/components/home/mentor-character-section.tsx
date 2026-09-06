@@ -7,6 +7,8 @@ import { domains } from "@/lib/domains";
 import { DURATION, riseVariants } from "@/lib/motion/tokens";
 import { cn } from "@/lib/utils";
 import { mentorCharacterStyles as styles } from "./mentor-character-section.styles";
+import { CharacterMascot } from "@/components/ui/character-mascot";
+import { useCharacterReaction } from "@/lib/hooks/useCharacterReaction";
 
 const MENTOR_CHARACTERS: Record<
   string,
@@ -49,12 +51,15 @@ export function MentorCharacterSection({
 }) {
   const router = useRouter();
   const [displayedMentor, setDisplayedMentor] = useState<string | null>(null);
+  const { reaction, happy, correct } = useCharacterReaction();
 
   useEffect(() => {
     if (selectedDomain) {
       setDisplayedMentor(selectedDomain);
+      // Mascot waves when domain is selected
+      happy();
     }
-  }, [selectedDomain]);
+  }, [selectedDomain, happy]);
 
   const mentor =
     displayedMentor && MENTOR_CHARACTERS[displayedMentor]
@@ -68,8 +73,17 @@ export function MentorCharacterSection({
       const domainConfig = domains.find((d) => d.id === displayedMentor);
       if (domainConfig && domainConfig.specialties.length > 0) {
         const firstSpecialty = domainConfig.specialties[0];
-        router.push(`/interview/${displayedMentor}/${firstSpecialty.id}`);
+        correct();
+        setTimeout(() => {
+          router.push(`/interview/${displayedMentor}/${firstSpecialty.id}`);
+        }, 1200);
       }
+    }
+  };
+
+  const handleMascotClick = () => {
+    if (!isLocked) {
+      happy();
     }
   };
 
@@ -102,17 +116,18 @@ export function MentorCharacterSection({
               transition={{ duration: DURATION.base }}
               className={styles.card}
             >
-              {/* Character Image */}
+              {/* Character Mascot - Interactive */}
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: DURATION.deliberate, ease: "easeOut" }}
-                className={styles.characterImage}
+                className={cn(styles.characterImage, "cursor-pointer")}
+                onClick={handleMascotClick}
               >
-                <img
-                  src={mentor.image}
-                  alt={mentor.name}
-                  className={styles.image}
+                <CharacterMascot
+                  size="lg"
+                  reaction={reaction}
+                  autoIdle={true}
                 />
               </motion.div>
 
