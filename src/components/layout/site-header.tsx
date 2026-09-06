@@ -62,7 +62,7 @@ export function SiteHeader({
   const [getStartedOpen, setGetStartedOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 px-3 py-3 sm:px-4 bg-quest-surface/80 backdrop-blur-xl supports-[backdrop-filter]:bg-quest-surface/60">
+    <header className="fixed top-0 left-0 right-0 z-50 px-3 py-3 sm:px-4 bg-background/50 backdrop-blur-sm">
       <div className="mx-auto flex max-w-7xl items-center gap-1">
         <Link
           href="/"

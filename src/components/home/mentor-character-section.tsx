@@ -11,6 +11,11 @@ import { CharacterMascot } from "@/components/ui/character-mascot";
 import { useCharacterReaction } from "@/lib/hooks/useCharacterReaction";
 import { SpecialtyPickerDialog } from "./specialty-picker-dialog";
 
+const ARROW_BOUNCE_ANIMATION = {
+  animate: { x: [0, 4, 0] },
+  transition: { duration: 1.5, repeat: Infinity },
+};
+
 const MENTOR_CHARACTERS: Record<
   string,
   {
@@ -21,7 +26,7 @@ const MENTOR_CHARACTERS: Record<
   }
 > = {
   tech: {
-    name: "Alex Dev",
+    name: "Dok",
     title: "Senior Software Engineer",
     description:
       "10 năm kinh nghiệm với các công nghệ web, mobile, và hệ thống phân tán",
@@ -71,7 +76,7 @@ export function MentorCharacterSection({
 
   const handleGetStarted = () => {
     if (displayedMentor) {
-      router.push(`/field/${displayedMentor}`);
+      router.push(`/fields/${displayedMentor}`);
     }
   };
 
@@ -159,6 +164,12 @@ export function MentorCharacterSection({
                     }}
                   >
                     Bắt đầu với {mentor.name}
+                    <motion.span
+                      {...ARROW_BOUNCE_ANIMATION}
+                      className="inline-block"
+                    >
+                      →
+                    </motion.span>
                   </motion.button>
                 </div>
               </motion.div>

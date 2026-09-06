@@ -15,7 +15,6 @@ import { riseVariants } from "@/lib/motion/tokens";
 import { cn } from "@/lib/utils";
 
 import { fieldHeroFor } from "./field-hero";
-import { FieldMentor } from "./field-mentor";
 import { SpecialtyCarousel } from "./specialty-carousel";
 import { fieldViewStyles as styles } from "./field-view.styles";
 
@@ -72,8 +71,6 @@ export function FieldView({
             <h1 className={styles.title}>{copy.sectionTitle}</h1>
             <p className={styles.subtitle}>{copy.description}</p>
           </motion.div>
-
-          {hero.mentor && <FieldMentor />}
 
           <div className={styles.carouselSection}>
             <SpecialtyCarousel nodes={nodes} onActivate={handleEnter} />

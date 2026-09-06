@@ -15,7 +15,7 @@ export interface CharacterMascotProps {
 const sizeMap = {
   sm: "w-24 h-36",
   md: "w-32 h-48",
-  lg: "w-48 h-72",
+  lg: "w-48 h-52",
   xl: "w-64 h-96",
 };
 
