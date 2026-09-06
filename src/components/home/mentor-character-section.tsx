@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { mentorCharacterStyles as styles } from "./mentor-character-section.styles";
 import { CharacterMascot } from "@/components/ui/character-mascot";
 import { useCharacterReaction } from "@/lib/hooks/useCharacterReaction";
-import { SpecialtySelectorModal } from "./specialty-selector-modal";
+import { SpecialtyPickerDialog } from "./specialty-picker-dialog";
 
 const MENTOR_CHARACTERS: Record<
   string,
@@ -52,7 +52,7 @@ export function MentorCharacterSection({
 }) {
   const router = useRouter();
   const [displayedMentor, setDisplayedMentor] = useState<string | null>(null);
-  const [isSpecialtyModalOpen, setIsSpecialtyModalOpen] = useState(false);
+  const [isSpecialtyPickerOpen, setIsSpecialtyPickerOpen] = useState(false);
   const { reaction, happy, correct } = useCharacterReaction();
 
   useEffect(() => {
@@ -71,13 +71,8 @@ export function MentorCharacterSection({
   const isLocked = !selectedDomain;
 
   const handleGetStarted = () => {
-    if (displayedMentor) {
-      setIsSpecialtyModalOpen(true);
-    }
-  };
-
-  const handleSpecialtySelect = (specialtyId: string) => {
     correct();
+    setIsSpecialtyPickerOpen(true);
   };
 
   const handleMascotClick = () => {
@@ -172,12 +167,9 @@ export function MentorCharacterSection({
         </div>
       </section>
 
-      {/* Specialty Selector Modal */}
-      <SpecialtySelectorModal
-        domainId={displayedMentor}
-        isOpen={isSpecialtyModalOpen}
-        onClose={() => setIsSpecialtyModalOpen(false)}
-        onSpecialtySelect={handleSpecialtySelect}
+      <SpecialtyPickerDialog
+        open={isSpecialtyPickerOpen}
+        onOpenChange={setIsSpecialtyPickerOpen}
       />
     </>
   );
