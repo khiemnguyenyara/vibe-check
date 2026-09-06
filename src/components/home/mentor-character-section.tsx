@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { mentorCharacterStyles as styles } from "./mentor-character-section.styles";
 import { CharacterMascot } from "@/components/ui/character-mascot";
 import { useCharacterReaction } from "@/lib/hooks/useCharacterReaction";
+import { SpecialtySelectorModal } from "./specialty-selector-modal";
 
 const MENTOR_CHARACTERS: Record<
   string,
@@ -51,6 +52,7 @@ export function MentorCharacterSection({
 }) {
   const router = useRouter();
   const [displayedMentor, setDisplayedMentor] = useState<string | null>(null);
+  const [isSpecialtyModalOpen, setIsSpecialtyModalOpen] = useState(false);
   const { reaction, happy, correct } = useCharacterReaction();
 
   useEffect(() => {
@@ -70,15 +72,12 @@ export function MentorCharacterSection({
 
   const handleGetStarted = () => {
     if (displayedMentor) {
-      const domainConfig = domains.find((d) => d.id === displayedMentor);
-      if (domainConfig && domainConfig.specialties.length > 0) {
-        const firstSpecialty = domainConfig.specialties[0];
-        correct();
-        setTimeout(() => {
-          router.push(`/interview/${displayedMentor}/${firstSpecialty.id}`);
-        }, 1200);
-      }
+      setIsSpecialtyModalOpen(true);
     }
+  };
+
+  const handleSpecialtySelect = (specialtyId: string) => {
+    correct();
   };
 
   const handleMascotClick = () => {
@@ -88,88 +87,98 @@ export function MentorCharacterSection({
   };
 
   return (
-    <section className={styles.root}>
-      <div className={styles.container}>
-        <AnimatePresence mode="wait">
-          {isLocked ? (
-            <motion.div
-              key="locked"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className={styles.lockedState}
-            >
+    <>
+      <section className={styles.root}>
+        <div className={styles.container}>
+          <AnimatePresence mode="wait">
+            {isLocked ? (
               <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
+                key="locked"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className={styles.lockedState}
               >
-                <div className={styles.lockIcon}>🔒</div>
-              </motion.div>
-              <p className={styles.lockedText}>Chọn một lĩnh vực ở trên để gặp mentor</p>
-            </motion.div>
-          ) : mentor && domain ? (
-            <motion.div
-              key={displayedMentor}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: DURATION.base }}
-              className={styles.card}
-            >
-              {/* Character Mascot - Interactive */}
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: DURATION.deliberate, ease: "easeOut" }}
-                className={cn(styles.characterImage, "cursor-pointer")}
-                onClick={handleMascotClick}
-              >
-                <CharacterMascot
-                  size="lg"
-                  reaction={reaction}
-                  autoIdle={true}
-                />
-              </motion.div>
-
-              {/* Content */}
-              <div className={styles.content}>
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: DURATION.base,
-                    delay: DURATION.quick,
-                  }}
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
                 >
-                  <h3 className={styles.mentorName}>{mentor.name}</h3>
-                  <p className={styles.mentorTitle}>{mentor.title}</p>
-                  <p className={styles.mentorDescription}>
-                    {mentor.description}
-                  </p>
+                  <div className={styles.lockIcon}>🔒</div>
+                </motion.div>
+                <p className={styles.lockedText}>Chọn một lĩnh vực ở trên để gặp mentor</p>
+              </motion.div>
+            ) : mentor && domain ? (
+              <motion.div
+                key={displayedMentor}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: DURATION.base }}
+                className={styles.card}
+              >
+                {/* Character Mascot - Interactive */}
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: DURATION.deliberate, ease: "easeOut" }}
+                  className={cn(styles.characterImage, "cursor-pointer")}
+                  onClick={handleMascotClick}
+                >
+                  <CharacterMascot
+                    size="lg"
+                    reaction={reaction}
+                    autoIdle={true}
+                  />
                 </motion.div>
 
-                <motion.button
-                  onClick={handleGetStarted}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: DURATION.base,
-                    delay: DURATION.base,
-                  }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={styles.ctaButton}
-                  style={{
-                    backgroundColor: domain.theme.badgeBg,
-                  }}
-                >
-                  Bắt đầu với {mentor.name}
-                </motion.button>
-              </div>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
-      </div>
-    </section>
+                {/* Content */}
+                <div className={styles.content}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: DURATION.base,
+                      delay: DURATION.quick,
+                    }}
+                  >
+                    <h3 className={styles.mentorName}>{mentor.name}</h3>
+                    <p className={styles.mentorTitle}>{mentor.title}</p>
+                    <p className={styles.mentorDescription}>
+                      {mentor.description}
+                    </p>
+                  </motion.div>
+
+                  <motion.button
+                    onClick={handleGetStarted}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: DURATION.base,
+                      delay: DURATION.base,
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={styles.ctaButton}
+                    style={{
+                      backgroundColor: domain.theme.badgeBg,
+                    }}
+                  >
+                    Bắt đầu với {mentor.name}
+                  </motion.button>
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </div>
+      </section>
+
+      {/* Specialty Selector Modal */}
+      <SpecialtySelectorModal
+        domainId={displayedMentor}
+        isOpen={isSpecialtyModalOpen}
+        onClose={() => setIsSpecialtyModalOpen(false)}
+        onSpecialtySelect={handleSpecialtySelect}
+      />
+    </>
   );
 }
