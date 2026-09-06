@@ -45,6 +45,10 @@
     "specialtyPicker": {
       "title": "What's your job specialty?",
       "subtitle": "Pick the one that matches your work so practice questions fit the real thing."
+    },
+    "mentor": {
+      "selectFieldPrompt": "Select a field above to meet your mentor",
+      "startWithMentor": "Start with {mentorName}"
     }
   },
   "fields": {

@@ -45,6 +45,10 @@
     "specialtyPicker": {
       "title": "Bạn làm trong lĩnh vực nào?",
       "subtitle": "Chọn đúng chuyên môn để câu hỏi luyện tập sát với công việc của bạn."
+    },
+    "mentor": {
+      "selectFieldPrompt": "Chọn một lĩnh vực ở trên để gặp mentor",
+      "startWithMentor": "Bắt đầu với {mentorName}"
     }
   },
   "fields": {

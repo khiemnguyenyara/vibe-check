@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { domains } from "@/lib/domains";
 import { DURATION, riseVariants } from "@/lib/motion/tokens";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/lib/i18n/locale-context";
+import { formatMessage } from "@/lib/i18n/format";
 import { mentorCharacterStyles as styles } from "./mentor-character-section.styles";
 import { CharacterMascot } from "@/components/ui/character-mascot";
 import { useCharacterReaction } from "@/lib/hooks/useCharacterReaction";
@@ -55,6 +57,7 @@ export function MentorCharacterSection({
   reduced: boolean;
 }) {
   const router = useRouter();
+  const { t } = useLocale();
   const [displayedMentor, setDisplayedMentor] = useState<string | null>(null);
   const [isSpecialtyPickerOpen, setIsSpecialtyPickerOpen] = useState(false);
   const { reaction, happy } = useCharacterReaction();
@@ -105,7 +108,7 @@ export function MentorCharacterSection({
                 >
                   <div className={styles.lockIcon}>🔒</div>
                 </motion.div>
-                <p className={styles.lockedText}>Chọn một lĩnh vực ở trên để gặp mentor</p>
+                <p className={styles.lockedText}>{t.home.mentor.selectFieldPrompt}</p>
               </motion.div>
             ) : mentor && domain ? (
               <motion.div
@@ -163,7 +166,7 @@ export function MentorCharacterSection({
                       backgroundColor: domain.theme.badgeBg,
                     }}
                   >
-                    Bắt đầu với {mentor.name}
+                    {formatMessage(t.home.mentor.startWithMentor, { mentorName: mentor.name })}
                     <motion.span
                       {...ARROW_BOUNCE_ANIMATION}
                       className="inline-block"
