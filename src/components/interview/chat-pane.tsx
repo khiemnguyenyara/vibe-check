@@ -1,19 +1,47 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { Check, Mic, RefreshCw, RotateCcw, Send } from "lucide-react";
 
 import { ActionBubble } from "@/components/ui/action-bubble";
 import { Button } from "@/components/ui/button";
+import { CharacterMascot } from "@/components/ui/character-mascot";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { fieldAccent } from "@/components/home/field-accent";
+import { useCharacterReaction } from "@/lib/hooks/useCharacterReaction";
 import { personaAvatar } from "@/lib/avatar";
+import { SPRING } from "@/lib/motion/tokens";
 import { cn } from "@/lib/utils";
 import type { TranscriptTurn } from "@/lib/session/types";
 
 import { getPendingQuestion } from "./current-question";
-import { EvaluationCard } from "./evaluation-card";
+import {
+  chatPaneStyles,
+  heartVariants,
+  optionButtonVariants,
+} from "./chat-pane.styles";
+
+/** Lives shown as hearts (Duolingo-style) — a wrong/weak answer costs one.
+ * Purely a client-side motivational cue: it never ends the session early or
+ * changes what gets sent to the server, so it can't desync from the
+ * server-authoritative SessionStatus / retry contract. */
+const MAX_HEARTS = 3;
+/** Below this score ratio, an answer counts as a "miss" for the hearts cue. */
+const HEART_LOSS_THRESHOLD = 0.5;
+
+function countHearts(turns: readonly TranscriptTurn[]): number {
+  const misses = turns.reduce((count, turn) => {
+    if (!turn.evaluation) return count;
+    const { score, maxScore } = turn.evaluation;
+    const ratio = maxScore === 0 ? 0 : score / maxScore;
+    return ratio < HEART_LOSS_THRESHOLD ? count + 1 : count;
+  }, 0);
+  return Math.max(0, MAX_HEARTS - misses);
+}
+
 
 /**
  * The Chat pane is Core-owned: docs/design-system.md §3.2 assigns it to
@@ -64,39 +92,31 @@ function PersonaAvatar({
   const persona = personaAvatar(domainId, seed);
 
   return (
-    <div className="relative size-8 shrink-0 overflow-hidden rounded-full border border-quest-surface-border bg-quest-surface">
+    <div className={chatPaneStyles.avatar}>
       <Image
         src={persona.src}
         alt=""
         fill
-        sizes="32px"
-        className={cn("object-cover", persona.className)}
+        sizes="36px"
+        className={cn(chatPaneStyles.avatarImage, persona.className)}
       />
     </div>
   );
 }
 
 function AiBubble({ content }: { content: string }) {
-  return (
-    <div className="max-w-[85%] self-start rounded-2xl rounded-tl-sm border border-quest-surface-border bg-quest-surface px-4 py-3 text-sm leading-relaxed text-card-foreground shadow-[0_8px_24px_-12px_var(--quest-glow)]">
-      {content}
-    </div>
-  );
+  return <div className={chatPaneStyles.aiBubble}>{content}</div>;
 }
 
 function UserBubble({ content }: { content: string }) {
-  return (
-    <div className="max-w-[85%] self-end whitespace-pre-wrap rounded-2xl rounded-br-sm bg-interview-accent px-4 py-3 text-sm leading-relaxed text-interview-accent-foreground shadow-[0_8px_24px_-12px_var(--quest-glow)]">
-      {content}
-    </div>
-  );
+  return <div className={chatPaneStyles.userBubble}>{content}</div>;
 }
 
 /**
  * Multiple-choice options, rendered where a free-text answer bubble would
  * otherwise go. Interactive only for the trailing pending turn; read-only
  * and highlighting the chosen option for past turns. The check glyph is the
- * real selected-state signal, not the border color alone (§11 colour
+ * real selected-state signal, not the fill color alone (§11 colour
  * independence — same reasoning level-picker.tsx follows for its cards).
  */
 function OptionsList({
@@ -111,37 +131,30 @@ function OptionsList({
   readonly onSelect: (option: string) => void;
 }) {
   return (
-    <div className="flex max-w-[85%] flex-col gap-2 self-start">
+    <div className={chatPaneStyles.optionsList}>
       {options.map((option) => {
         const isSelected = selectedAnswer === option;
         return (
-          <button
+          <motion.button
             key={option}
             type="button"
             disabled={!interactive}
             onClick={() => onSelect(option)}
             aria-pressed={isSelected}
-            className={cn(
-              "flex items-center justify-between gap-2 rounded-2xl border p-3 text-left text-sm",
-              "outline-none transition-[box-shadow,transform,border-color]",
-              "focus-visible:ring-2 focus-visible:ring-interview-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-              "motion-reduce:transition-none",
-              "border-quest-surface-border bg-quest-surface",
-              interactive &&
-                "hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-10px_var(--quest-glow)] motion-reduce:hover:translate-y-0",
-              !interactive && "cursor-default",
-              isSelected &&
-                "border-interview-accent/50 shadow-[0_10px_30px_-12px_var(--quest-glow)]"
-            )}
+            whileTap={interactive ? { scale: 0.98, y: 1 } : undefined}
+            transition={SPRING.press}
+            className={optionButtonVariants({
+              interactive,
+              selected: isSelected,
+            })}
           >
-            <span className="text-card-foreground">{option}</span>
+            <span className={chatPaneStyles.optionLabel}>{option}</span>
             {isSelected && (
-              <Check
-                className="size-4 shrink-0 text-interview-accent-text"
-                aria-hidden
-              />
+              <span className={chatPaneStyles.optionCheckBadge}>
+                <Check className="size-3.5" aria-hidden />
+              </span>
             )}
-          </button>
+          </motion.button>
         );
       })}
     </div>
@@ -150,7 +163,7 @@ function OptionsList({
 
 function PendingAiBubble() {
   return (
-    <div className="flex max-w-[85%] flex-col gap-2 self-start rounded-2xl rounded-tl-sm border border-quest-surface-border bg-quest-surface px-4 py-3 shadow-[0_8px_24px_-12px_var(--quest-glow)]">
+    <div className={chatPaneStyles.pendingAiBubble}>
       <Skeleton className="h-3 w-40" />
       <Skeleton className="h-3 w-52" />
       <Skeleton className="h-3 w-28" />
@@ -160,7 +173,7 @@ function PendingAiBubble() {
 
 function PendingEvaluation() {
   return (
-    <div className="flex max-w-[85%] flex-col gap-2 self-start rounded-2xl border-2 border-dashed border-foreground/30 px-4 py-3">
+    <div className={chatPaneStyles.pendingEvaluation}>
       <Skeleton className="h-3 w-32" />
       <Skeleton className="h-3 w-44" />
     </div>
@@ -179,17 +192,17 @@ function ErrorBubble({
   onAbandon?: () => void;
 }) {
   return (
-    <div className="flex max-w-[85%] flex-col items-start gap-2 self-start rounded-2xl rounded-tl-sm border-2 border-destructive bg-quest-surface px-4 py-3 text-sm text-destructive shadow-[0_8px_24px_-12px_var(--quest-glow)]">
+    <div className={chatPaneStyles.errorBubble}>
       <span>{message}</span>
       {(onRetry || onAbandon) && (
-        <div className="flex items-center gap-2">
+        <div className={chatPaneStyles.errorActions}>
           {onRetry && (
             <Button
               type="button"
               size="sm"
               variant="outline"
               onClick={onRetry}
-              className="h-7 gap-1.5 rounded-full border-2 border-destructive text-xs text-destructive"
+              className={chatPaneStyles.errorRetryButton}
             >
               <RotateCcw className="size-3.5" />
               Thử lại
@@ -201,7 +214,7 @@ function ErrorBubble({
               size="sm"
               variant="ghost"
               onClick={onAbandon}
-              className="h-7 gap-1.5 rounded-full text-xs text-destructive/70 hover:text-destructive"
+              className={chatPaneStyles.errorAbandonButton}
             >
               <RefreshCw className="size-3.5" />
               Bắt đầu lại
@@ -223,7 +236,6 @@ export function ChatPane({
   isEvaluating,
   error,
   isReadOnly,
-  sessionLength,
   pendingAnswer,
   onSubmitAnswer,
   onRetry,
@@ -240,9 +252,30 @@ export function ChatPane({
     !isReadOnly &&
     (isMultipleChoice ? selectedOption !== null : answer.trim().length > 0);
 
-  const questionsAsked = turns.length;
-  const progress =
-    sessionLength === 0 ? 0 : Math.min(questionsAsked / sessionLength, 1);
+  const hearts = useMemo(() => countHearts(turns), [turns]);
+
+  const { reaction, correct, incorrect } = useCharacterReaction();
+  const gradedCountRef = useRef(0);
+  useEffect(() => {
+    const graded = turns.filter((turn) => turn.evaluation).length;
+    if (graded > gradedCountRef.current) {
+      const latest = [...turns].reverse().find((turn) => turn.evaluation)
+        ?.evaluation;
+      if (latest) {
+        const ratio = latest.maxScore === 0 ? 0 : latest.score / latest.maxScore;
+        // A visual-only nudge on the mascot, mirroring the hearts cue above —
+        // never surfaces the score/text itself (that stays out of ChatPane
+        // by design, see InterviewHeader's doc comment).
+        if (ratio < HEART_LOSS_THRESHOLD) incorrect();
+        else correct();
+      }
+    }
+    gradedCountRef.current = graded;
+  }, [turns, correct, incorrect]);
+  // isBusy overrides the reaction pulse: thinking is a live state, not a
+  // fire-once cue, so it must track isBusy directly rather than the timed
+  // reaction from useCharacterReaction.
+  const mascotReaction = isBusy ? "thinking" : reaction;
 
   const bottomRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -269,14 +302,14 @@ export function ChatPane({
   }
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-neutral-100 dark:bg-neutral-950">
-      <div className="relative z-10 flex-1 overflow-y-auto px-4 py-6 sm:px-8">
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+    <div className={chatPaneStyles.root} style={fieldAccent(domainId)}>
+      <div className={chatPaneStyles.scrollArea}>
+        <div className={chatPaneStyles.transcript}>
           {turns.map((turn) => {
             const isPending = turn.answer === null;
             return (
-              <div key={turn.id} className="flex flex-col gap-4">
-                <div className="flex items-start gap-2">
+              <div key={turn.id} className={chatPaneStyles.turn}>
+                <div className={chatPaneStyles.questionRow}>
                   <PersonaAvatar domainId={domainId} seed={avatarSeed} />
                   <AiBubble content={turn.question.prompt} />
                 </div>
@@ -290,9 +323,9 @@ export function ChatPane({
                 ) : (
                   turn.answer !== null && <UserBubble content={turn.answer} />
                 )}
-                {turn.evaluation !== null && (
-                  <EvaluationCard evaluation={turn.evaluation} />
-                )}
+                {/* No EvaluationCard here on purpose — Duolingo-style flow:
+                    the candidate finds out how they did on SessionSummary
+                    once the interview ends, not turn-by-turn. */}
               </div>
             );
           })}
@@ -314,7 +347,7 @@ export function ChatPane({
             </>
           )}
           {isFetchingNext && (
-            <div className="flex items-start gap-2">
+            <div className={chatPaneStyles.questionRow}>
               <PersonaAvatar domainId={domainId} seed={avatarSeed} />
               <PendingAiBubble />
             </div>
@@ -327,7 +360,7 @@ export function ChatPane({
             />
           )}
           {isReadOnly && (
-            <p className="self-center rounded-full bg-foreground/5 px-3 py-1 text-xs font-medium text-muted-foreground">
+            <p className={chatPaneStyles.readOnlyBadge}>
               Cuộc phỏng vấn đã kết thúc
             </p>
           )}
@@ -335,44 +368,47 @@ export function ChatPane({
         </div>
       </div>
 
-      <footer className="relative z-10 shrink-0 border-t border-quest-surface-border bg-background p-4 sm:px-8">
-        <div className="mx-auto flex w-full max-w-2xl items-end gap-2">
-          {isMultipleChoice ? (
-            <p className="flex min-h-12 flex-1 items-center text-sm text-muted-foreground">
-              Chọn một đáp án ở trên rồi bấm gửi.
-            </p>
-          ) : (
-            <>
-              <Textarea
-                value={answer}
-                onChange={(event) => setAnswer(event.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Chia sẻ cách bạn giải quyết vấn đề này..."
-                disabled={isBusy || isReadOnly}
-                className="max-h-40 min-h-12 flex-1 resize-none rounded-sm border border-quest-surface-border bg-background px-3 py-2.5 shadow-none focus-visible:border-interview-accent focus-visible:ring-0"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                disabled
-                aria-label="Trả lời bằng giọng nói (sắp ra mắt)"
-                className="size-11 shrink-0 rounded-full border border-quest-surface-border bg-background text-foreground/70"
-              >
-                <Mic className="size-4" />
-              </Button>
-            </>
-          )}
+      <footer className={chatPaneStyles.footer}>
+        <div className={chatPaneStyles.footerInner}>
+          <div className={chatPaneStyles.controlsRow}>
+            {isMultipleChoice ? (
+              <p className={chatPaneStyles.optionHint}>
+                Chọn một đáp án ở trên rồi bấm gửi.
+              </p>
+            ) : (
+              <>
+                <Textarea
+                  value={answer}
+                  onChange={(event) => setAnswer(event.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Chia sẻ cách bạn giải quyết vấn đề này..."
+                  disabled={isBusy || isReadOnly}
+                  className={chatPaneStyles.textarea}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  disabled
+                  aria-label="Trả lời bằng giọng nói (sắp ra mắt)"
+                  className={chatPaneStyles.micButton}
+                >
+                  <Mic className="size-4" />
+                </Button>
+              </>
+            )}
+          </div>
           <ActionBubble
             state={
               isReadOnly || isBusy ? "disabled" : canSend ? "ready" : "disabled"
             }
             onClick={handleSend}
             aria-label="Gửi câu trả lời"
+            icon={<Send className="size-4" aria-hidden />}
             breathing={false}
-            className="size-11 shrink-0 px-0"
+            className={chatPaneStyles.submitButton}
           >
-            <Send className="size-4" aria-hidden />
+            Gửi câu trả lời
           </ActionBubble>
         </div>
       </footer>
