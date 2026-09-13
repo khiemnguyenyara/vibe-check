@@ -17,12 +17,6 @@ import { cn } from "@/lib/utils";
  * nothing.
  */
 
-const DIFFICULTY_LABEL: Record<1 | 2 | 3, string> = {
-  1: "Cơ bản",
-  2: "Trung bình",
-  3: "Khó",
-};
-
 function stateLabel(state: QuestNodeState, bestPercent?: number): string {
   switch (state) {
     case "locked":
@@ -77,7 +71,7 @@ export function CareerCard({
   description,
   icon: Icon,
   state,
-  difficulty,
+  difficulty: _difficulty,
   bestPercent,
   lockedReason,
   onActivate,
@@ -121,9 +115,6 @@ export function CareerCard({
             )}
           >
             <Icon className="size-6" aria-hidden />
-          </span>
-          <span className="rounded-full bg-foreground/5 px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
-            {DIFFICULTY_LABEL[difficulty]}
           </span>
         </div>
 

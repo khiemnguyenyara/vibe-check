@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { domains } from "@/lib/domains";
-import { DURATION, EASE, riseVariants } from "@/lib/motion/tokens";
-import { useLocale } from "@/lib/i18n/locale-context";
+import { riseVariants } from "@/lib/motion/tokens";
 import { cn } from "@/lib/utils";
 import { specialtySelectorStyles as styles } from "./specialty-selector-section.styles";
 
@@ -16,7 +15,6 @@ export function SpecialtySelectorSection({
   reduced: boolean;
 }) {
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
-  const { t } = useLocale();
 
   const handleDomainSelect = (domainId: string) => {
     setSelectedDomain(domainId);
@@ -55,7 +53,7 @@ export function SpecialtySelectorSection({
           },
         }}
       >
-        {domains.map((domain, index) => (
+        {domains.map((domain) => (
           <motion.button
             key={domain.id}
             variants={riseVariants(reduced, 12)}

@@ -1,15 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 
 import { DomainCard } from "@/components/fields/domain-card";
 import {
   FieldsSidebar,
   type DomainStatusFilter,
 } from "@/components/fields/fields-sidebar";
-import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { domains } from "@/lib/domains";
 import { domainCopy } from "@/lib/i18n/domain-copy";

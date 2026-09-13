@@ -7,7 +7,6 @@ import { Check, Mic, RefreshCw, RotateCcw, Send } from "lucide-react";
 
 import { ActionBubble } from "@/components/ui/action-bubble";
 import { Button } from "@/components/ui/button";
-import { CharacterMascot } from "@/components/ui/character-mascot";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { fieldAccent } from "@/components/home/field-accent";
@@ -20,7 +19,6 @@ import type { TranscriptTurn } from "@/lib/session/types";
 import { getPendingQuestion } from "./current-question";
 import {
   chatPaneStyles,
-  heartVariants,
   optionButtonVariants,
 } from "./chat-pane.styles";
 
@@ -227,7 +225,7 @@ function ErrorBubble({
 }
 
 export function ChatPane({
-  title,
+  title: _title,
   onAbandon,
   domainId,
   avatarSeed,
@@ -252,9 +250,9 @@ export function ChatPane({
     !isReadOnly &&
     (isMultipleChoice ? selectedOption !== null : answer.trim().length > 0);
 
-  const hearts = useMemo(() => countHearts(turns), [turns]);
+  const _hearts = useMemo(() => countHearts(turns), [turns]);
 
-  const { reaction, correct, incorrect } = useCharacterReaction();
+  const { reaction: _reaction, correct, incorrect } = useCharacterReaction();
   const gradedCountRef = useRef(0);
   useEffect(() => {
     const graded = turns.filter((turn) => turn.evaluation).length;
@@ -275,7 +273,7 @@ export function ChatPane({
   // isBusy overrides the reaction pulse: thinking is a live state, not a
   // fire-once cue, so it must track isBusy directly rather than the timed
   // reaction from useCharacterReaction.
-  const mascotReaction = isBusy ? "thinking" : reaction;
+  const _mascotReaction = isBusy ? "thinking" : _reaction;
 
   const bottomRef = useRef<HTMLDivElement>(null);
   useEffect(() => {

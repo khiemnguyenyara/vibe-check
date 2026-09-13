@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { domains } from "@/lib/domains";
-import { DURATION, riseVariants } from "@/lib/motion/tokens";
+import { DURATION } from "@/lib/motion/tokens";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/i18n/locale-context";
 import { formatMessage } from "@/lib/i18n/format";
@@ -52,9 +52,10 @@ const MENTOR_CHARACTERS: Record<
 
 export function MentorCharacterSection({
   selectedDomain,
+  reduced: _reduced,
 }: {
   selectedDomain: string | null;
-  reduced: boolean;
+  reduced?: boolean;
 }) {
   const router = useRouter();
   const { t } = useLocale();

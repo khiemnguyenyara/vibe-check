@@ -6,7 +6,6 @@ import { fieldAccent } from "@/components/home/field-accent";
 import type { ResolvedNode } from "@/components/home/types";
 import type { useFieldNavigation } from "@/components/home/use-field-navigation";
 import { LevelPickerDialog } from "@/components/interview/level-picker-dialog";
-import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import type { DomainConfig } from "@/lib/domains";
 import { domainCopy } from "@/lib/i18n/domain-copy";
